@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-
+import random
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
@@ -419,6 +419,12 @@ db_questions = {
     ]
 }
 
+# [ ... ICI, TU DOIS AVOIR TA GROSSE BASE DE DONNÉES db_questions INTACTE ... ]
+
+# =========================================================
+# ⚙️ MOTEUR INTELLIGENT (ALÉATOIRE & SUIVI)
+# =========================================================
+
 # --- GESTION DE L'ÉTAT (SESSION STATE) ---
 if 'history' not in st.session_state:
     st.session_state.history = [] 
@@ -430,6 +436,12 @@ if 'validated_questions' not in st.session_state:
     st.session_state.validated_questions = set() 
 if 'show_explanation' not in st.session_state:
     st.session_state.show_explanation = {}
+# NOUVEAU : On stocke les questions tirées au sort pour qu'elles ne changent pas pendant le quiz
+if 'quiz_batch' not in st.session_state:
+    st.session_state.quiz_batch = []
+
+# --- CONSTANTE : NOMBRE DE QUESTIONS PAR TIRAGE ---
+QUESTIONS_PAR_QUIZ = 20
 
 # --- NAVIGATION ---
 menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"])
@@ -452,6 +464,20 @@ def get_weaknesses():
     counts = Counter(all_mistakes)
     return counts.most_common(5)
 
+def generer_nouveau_quiz(module):
+    """Tire au sort 15 questions nouvelles depuis la base de données"""
+    all_questions = db_questions[module]
+    # On prend 15 questions au hasard (ou moins si le module en a moins de 15)
+    nb_to_take = min(len(all_questions), QUESTIONS_PAR_QUIZ)
+    st.session_state.quiz_batch = random.sample(all_questions, nb_to_take)
+    
+    # On réinitialise les scores pour ce nouveau round
+    st.session_state.current_score = 0
+    st.session_state.current_mistakes = []
+    st.session_state.validated_questions = set()
+    st.session_state.show_explanation = {}
+    st.session_state.active_module = module
+
 # =========================================================
 # PAGE 1 : TABLEAU DE BORD
 # =========================================================
@@ -462,16 +488,14 @@ if menu == "Tableau de Bord":
     if stats is None:
         st.info("👋 Bienvenue ! Aucune donnée pour l'instant. Va dans l'onglet 'Passer un Quiz' pour commencer.")
     else:
-        # 1. Indicateurs
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Quiz terminés", len(st.session_state.history))
+            st.metric("Tests réalisés", len(st.session_state.history))
         with col2:
             st.metric("Moyenne Générale", f"{stats['score_percent'].mean():.1f}%")
         
         st.write("---")
         
-        # 2. Graphique Bâtons (Moyenne par Module)
         col_graph1, col_graph2 = st.columns(2)
         with col_graph1:
             st.subheader("📈 Moyenne par matière")
@@ -480,22 +504,18 @@ if menu == "Tableau de Bord":
                          color='score_percent', color_continuous_scale='Bluered')
             st.plotly_chart(fig_bar, use_container_width=True)
 
-        # 3. NOUVEAU : Graphique Évolution dans le temps (Courbes)
         with col_graph2:
             st.subheader("🚀 Évolution de tes notes")
             df_hist = pd.DataFrame(st.session_state.history)
-            # On ajoute un index chronologique (1, 2, 3...)
             df_hist['Essai'] = range(1, len(df_hist) + 1)
-            
             fig_line = px.line(df_hist, x='Essai', y='score_percent', color='module', markers=True,
                                range_y=[0, 105],
                                labels={'Essai': 'Ordre des Quiz', 'score_percent': 'Note (%)'},
                                title="Progression au fil des essais")
             st.plotly_chart(fig_line, use_container_width=True)
         
-        # 4. Lacunes
         st.write("---")
-        st.subheader("⚠️ Top 5 des thèmes à revoir")
+        st.subheader("⚠️ Tes points faibles (tous quiz confondus)")
         weaknesses = get_weaknesses()
         if weaknesses:
             cols = st.columns(5)
@@ -506,30 +526,38 @@ if menu == "Tableau de Bord":
             st.success("Aucune lacune récurrente détectée !")
 
 # =========================================================
-# PAGE 2 : QUIZ
+# PAGE 2 : QUIZ (MODE ALÉATOIRE)
 # =========================================================
 elif menu == "Passer un Quiz":
+    
     module_choisi = st.sidebar.selectbox("Choisir le module :", list(db_questions.keys()))
     
-    # Reset si changement de module
+    # BOUTON POUR LANCER UN NOUVEAU QUIZ
+    if st.sidebar.button("NOUVEAU QUIZ (20 Q)", type="primary"):
+        generer_nouveau_quiz(module_choisi)
+        st.rerun()
+
+    # Si c'est la première fois qu'on arrive ou si on change de module via le menu sans cliquer sur le bouton
     if 'active_module' not in st.session_state or st.session_state.active_module != module_choisi:
-        st.session_state.active_module = module_choisi
-        st.session_state.current_score = 0
-        st.session_state.current_mistakes = []
-        st.session_state.validated_questions = set()
-        st.session_state.show_explanation = {}
+        generer_nouveau_quiz(module_choisi)
     
+    # Affichage du Quiz
     st.title(f"📝 {module_choisi}")
-    questions = db_questions[module_choisi]
+    st.caption(f"Série aléatoire de {len(st.session_state.quiz_batch)} questions tirées de la base de données.")
+    
+    # On utilise le batch stocké en mémoire (pour qu'il ne change pas à chaque clic)
+    questions = st.session_state.quiz_batch
     
     for i, q in enumerate(questions):
         st.markdown(f"<div class='question-card'><h5>Question {i+1} <span style='background:#eee;padding:2px 5px;border-radius:5px;font-size:0.7em'>{q['tag']}</span></h5>", unsafe_allow_html=True)
         st.write(f"**{q['q']}**")
-        q_id = f"{module_choisi}_{i}"
+        # On utilise le q['q'] comme partie de la clé pour qu'elle soit unique même si l'ordre change
+        q_hash = hash(q['q']) 
+        q_id = f"{module_choisi}_{q_hash}"
         
         if q["type"] == "qcm":
             user_choice = st.radio("Réponse :", q["options"], key=f"radio_{q_id}", index=None)
-            if st.button(f"Valider Q{i+1}", key=f"btn_{q_id}"):
+            if st.button(f"Valider", key=f"btn_{q_id}"):
                 st.session_state.show_explanation[q_id] = True
                 if q_id not in st.session_state.validated_questions:
                     st.session_state.validated_questions.add(q_id)
@@ -547,7 +575,7 @@ elif menu == "Passer un Quiz":
 
         elif q["type"] == "ouverte":
             st.text_area("Ta réflexion :", key=f"txt_{q_id}")
-            if st.button(f"Vérifier Q{i+1}", key=f"btn_{q_id}"):
+            if st.button(f"Vérifier", key=f"btn_{q_id}"):
                 st.session_state.show_explanation[q_id] = True
                 if q_id not in st.session_state.validated_questions:
                     st.session_state.validated_questions.add(q_id)
@@ -566,11 +594,11 @@ elif menu == "Passer un Quiz":
                         st.rerun()
         st.markdown("---")
 
-    if st.button("🏁 TERMINER CE MODULE", type="primary"):
+    if st.button("🏁 TERMINER CE TEST", type="primary"):
         total_q = len(questions)
         score = st.session_state.current_score
         percent = (score / total_q) * 100
-        # Ajout timestamp pour futur usage
+        
         st.session_state.history.append({
             "module": module_choisi, 
             "score": score, 
@@ -580,10 +608,18 @@ elif menu == "Passer un Quiz":
             "date": datetime.now()
         })
         st.balloons()
-        st.success(f"Score : {score}/{total_q} ({percent:.0f}%)")
+        
+        st.markdown(f"""
+        <div style="background-color:#d4edda;padding:20px;border-radius:10px;text-align:center;">
+            <h2>Score : {score}/{total_q}</h2>
+            <h3>Note : {percent:.0f}/20</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
         if st.session_state.current_mistakes:
-            st.write("### 🔍 À revoir :")
+            st.write("### 🔍 Sur cette série, revois ces points :")
             from collections import Counter
             for tag, count in Counter(st.session_state.current_mistakes).items():
                 st.markdown(f"- **{tag}** ({count} fautes)")
-        st.info("Résultats ajoutés au graphique d'évolution dans le Tableau de Bord.")
+        
+        st.info("Résultat enregistré ! Clique sur 'Générer un nouveau quiz' à gauche pour relancer une série différente.")
