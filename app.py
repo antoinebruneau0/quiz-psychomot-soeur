@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from datetime import datetime
 
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
@@ -8,11 +9,12 @@ st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_ic
 # --- CSS PRO ---
 st.markdown("""
 <style>
-    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; }
-    .metric-card { background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #4e73df; text-align: center; }
+    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; transition: all 0.3s; }
+    .stButton>button:hover { transform: scale(1.02); }
+    .metric-card { background-color: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid #4e73df; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
     .feedback-box { padding: 15px; border-radius: 10px; margin-top: 10px; background-color: #e8f4f8; border-left: 5px solid #2e86de; color: #1e3799; }
-    .weakness-tag { background-color: #ffcccc; color: #cc0000; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; margin: 2px; display: inline-block; }
-    h1, h2, h3 { color: #2c3e50; }
+    .question-card { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e0e0e0; }
+    h1, h2, h3 { color: #2c3e50; font-family: 'Segoe UI', sans-serif; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -24,7 +26,7 @@ db_questions = {
         {"q": "Quelle est la définition de la biodisponibilité ?", "options": ["Vitesse d'élimination", "Fraction de la dose atteignant la circulation générale sous forme inchangée", "Toxicité", "Volume de distribution"], "answer": "Fraction de la dose atteignant la circulation générale sous forme inchangée", "type": "qcm", "explanation": "100% en IV, moins en per os (premier passage hépatique).", "tag": "Pharmacologie"},
         {"q": "Qu'est-ce que l'effet de premier passage hépatique ?", "type": "ouverte", "answer": "Perte de principe actif lors du passage par le foie avant d'atteindre la circulation générale.", "explanation": "Le foie dégrade une partie du médicament absorbé.", "tag": "Pharmacologie"},
         {"q": "Différence Princeps / Générique ?", "type": "ouverte", "answer": "Princeps = Original breveté. Générique = Copie (même PA, même dosage) après chute du brevet.", "explanation": "Bioéquivalence obligatoire.", "tag": "Pharmacologie"},
-        {"q": "Qu'est-ce qu'un excipient ?", "options": ["Principe actif", "Substance inactive (forme/goût)", "Poison"], "answer": "Substance inactive (forme/goût)", "type": "qcm", "explanation": "Sert à la fabrication et conservation (ex: amidon, sucre).", "tag": "Pharmacologie"},
+        {"q": "Qu'est-ce un excipient ?", "options": ["Principe actif", "Substance inactive (forme/goût)", "Poison"], "answer": "Substance inactive (forme/goût)", "type": "qcm", "explanation": "Sert à la fabrication et conservation (ex: amidon, sucre).", "tag": "Pharmacologie"},
         {"q": "Demi-vie d'élimination (T1/2) ?", "type": "ouverte", "answer": "Temps nécessaire pour que la concentration plasmatique diminue de 50%.", "explanation": "Il faut 5 à 7 demi-vies pour éliminer le produit.", "tag": "Pharmacologie"},
         {"q": "Clairance rénale ?", "options": ["Volume de plasma épuré par unité de temps", "Volume d'urine"], "answer": "Volume de plasma épuré par unité de temps", "type": "qcm", "explanation": "Mesure la fonction rénale.", "tag": "Pharmacologie"},
         
@@ -173,8 +175,9 @@ if menu == "Tableau de Bord":
     stats = get_global_stats()
     
     if stats is None:
-        st.info("👋 Aucune donnée. Va dans 'Passer un Quiz' pour commencer.")
+        st.info("👋 Bienvenue ! Aucune donnée pour l'instant. Va dans l'onglet 'Passer un Quiz' pour commencer.")
     else:
+        # 1. Indicateurs
         col1, col2 = st.columns(2)
         with col1:
             st.metric("Quiz terminés", len(st.session_state.history))
@@ -182,11 +185,31 @@ if menu == "Tableau de Bord":
             st.metric("Moyenne Générale", f"{stats['score_percent'].mean():.1f}%")
         
         st.write("---")
-        st.subheader("📈 Progression par Module")
-        fig = px.bar(stats, x='module', y='score_percent', range_y=[0, 100], 
-                     color='score_percent', color_continuous_scale='Bluered')
-        st.plotly_chart(fig, use_container_width=True)
         
+        # 2. Graphique Bâtons (Moyenne par Module)
+        col_graph1, col_graph2 = st.columns(2)
+        with col_graph1:
+            st.subheader("📈 Moyenne par matière")
+            fig_bar = px.bar(stats, x='module', y='score_percent', range_y=[0, 100], 
+                         labels={'score_percent': 'Note Moyenne (%)'},
+                         color='score_percent', color_continuous_scale='Bluered')
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        # 3. NOUVEAU : Graphique Évolution dans le temps (Courbes)
+        with col_graph2:
+            st.subheader("🚀 Évolution de tes notes")
+            df_hist = pd.DataFrame(st.session_state.history)
+            # On ajoute un index chronologique (1, 2, 3...)
+            df_hist['Essai'] = range(1, len(df_hist) + 1)
+            
+            fig_line = px.line(df_hist, x='Essai', y='score_percent', color='module', markers=True,
+                               range_y=[0, 105],
+                               labels={'Essai': 'Ordre des Quiz', 'score_percent': 'Note (%)'},
+                               title="Progression au fil des essais")
+            st.plotly_chart(fig_line, use_container_width=True)
+        
+        # 4. Lacunes
+        st.write("---")
         st.subheader("⚠️ Top 5 des thèmes à revoir")
         weaknesses = get_weaknesses()
         if weaknesses:
@@ -195,7 +218,7 @@ if menu == "Tableau de Bord":
                 with cols[i % 5]:
                     st.markdown(f"<div class='metric-card' style='border-left: 5px solid #ff4d4d;'><b>{tag}</b><br>{count} erreurs</div>", unsafe_allow_html=True)
         else:
-            st.success("Aucune lacune récurrente !")
+            st.success("Aucune lacune récurrente détectée !")
 
 # =========================================================
 # PAGE 2 : QUIZ
@@ -262,9 +285,14 @@ elif menu == "Passer un Quiz":
         total_q = len(questions)
         score = st.session_state.current_score
         percent = (score / total_q) * 100
+        # Ajout timestamp pour futur usage
         st.session_state.history.append({
-            "module": module_choisi, "score": score, "total": total_q,
-            "score_percent": percent, "mistakes": st.session_state.current_mistakes
+            "module": module_choisi, 
+            "score": score, 
+            "total": total_q,
+            "score_percent": percent, 
+            "mistakes": st.session_state.current_mistakes,
+            "date": datetime.now()
         })
         st.balloons()
         st.success(f"Score : {score}/{total_q} ({percent:.0f}%)")
@@ -273,4 +301,4 @@ elif menu == "Passer un Quiz":
             from collections import Counter
             for tag, count in Counter(st.session_state.current_mistakes).items():
                 st.markdown(f"- **{tag}** ({count} fautes)")
-        st.info("Résultats enregistrés dans le Tableau de Bord.")
+        st.info("Résultats ajoutés au graphique d'évolution dans le Tableau de Bord.")
