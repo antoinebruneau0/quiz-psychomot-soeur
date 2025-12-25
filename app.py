@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 import random
+import json
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
@@ -419,10 +420,8 @@ db_questions = {
     ]
 }
 
-# [ ... ICI, TU DOIS AVOIR TA GROSSE BASE DE DONNÉES db_questions INTACTE ... ]
-
 # =========================================================
-# ⚙️ MOTEUR INTELLIGENT (ALÉATOIRE & SUIVI)
+# ⚙️ MOTEUR INTELLIGENT (ALÉATOIRE & SUIVI & SAUVEGARDE)
 # =========================================================
 
 # --- GESTION DE L'ÉTAT (SESSION STATE) ---
@@ -436,12 +435,42 @@ if 'validated_questions' not in st.session_state:
     st.session_state.validated_questions = set() 
 if 'show_explanation' not in st.session_state:
     st.session_state.show_explanation = {}
-# NOUVEAU : On stocke les questions tirées au sort pour qu'elles ne changent pas pendant le quiz
 if 'quiz_batch' not in st.session_state:
     st.session_state.quiz_batch = []
 
-# --- CONSTANTE : NOMBRE DE QUESTIONS PAR TIRAGE ---
-QUESTIONS_PAR_QUIZ = 20
+QUESTIONS_PAR_QUIZ = 15
+
+# --- BARRE LATÉRALE : SAUVEGARDE & CHARGEMENT ---
+st.sidebar.image("https://img.icons8.com/color/96/000000/brain--v1.png", width=60)
+st.sidebar.title("🧠 Psychomot'")
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("💾 Sauvegarde")
+
+# BOUTON CHARGER
+uploaded_file = st.sidebar.file_uploader("Charger une progression", type="json")
+if uploaded_file is not None:
+    try:
+        data = json.load(uploaded_file)
+        if isinstance(data, list):
+            st.session_state.history = data
+            st.sidebar.success("✅ Progression chargée !")
+    except:
+        st.sidebar.error("Fichier invalide.")
+
+# BOUTON SAUVEGARDER
+if st.session_state.history:
+    json_history = json.dumps(st.session_state.history)
+    st.sidebar.download_button(
+        label="📥 Sauvegarder ma progression",
+        data=json_history,
+        file_name="ma_progression_psychomot.json",
+        mime="application/json"
+    )
+else:
+    st.sidebar.caption("Fais au moins un quiz pour pouvoir sauvegarder.")
+
+st.sidebar.markdown("---")
 
 # --- NAVIGATION ---
 menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"])
@@ -451,8 +480,28 @@ def get_global_stats():
     if not st.session_state.history:
         return None
     df = pd.DataFrame(st.session_state.history)
-    avg_per_module = df.groupby("module")["score_percent"].mean().reset_index()
+    # On ajoute la colonne note sur 20
+    df['note_20'] = df['score_percent'] / 5
+    avg_per_module = df.groupby("module")["note_20"].mean().reset_index()
     return avg_per_module
+
+def get_best_worst():
+    if not st.session_state.history:
+        return None, None
+    df = pd.DataFrame(st.session_state.history)
+    df['note_20'] = df['score_percent'] / 5
+    
+    # Meilleur score (Max)
+    idx_max = df['note_20'].idxmax()
+    best = df.loc[idx_max]
+    best_txt = f"{best['note_20']:.1f}/20 ({best['module']})"
+    
+    # Pire score (Min)
+    idx_min = df['note_20'].idxmin()
+    worst = df.loc[idx_min]
+    worst_txt = f"{worst['note_20']:.1f}/20 ({worst['module']})"
+    
+    return best_txt, worst_txt
 
 def get_weaknesses():
     all_mistakes = []
@@ -465,13 +514,12 @@ def get_weaknesses():
     return counts.most_common(5)
 
 def generer_nouveau_quiz(module):
-    """Tire au sort 15 questions nouvelles depuis la base de données"""
+    if module not in db_questions:
+        st.error("Erreur de chargement du module.")
+        return
     all_questions = db_questions[module]
-    # On prend 15 questions au hasard (ou moins si le module en a moins de 15)
     nb_to_take = min(len(all_questions), QUESTIONS_PAR_QUIZ)
     st.session_state.quiz_batch = random.sample(all_questions, nb_to_take)
-    
-    # On réinitialise les scores pour ce nouveau round
     st.session_state.current_score = 0
     st.session_state.current_mistakes = []
     st.session_state.validated_questions = set()
@@ -488,30 +536,44 @@ if menu == "Tableau de Bord":
     if stats is None:
         st.info("👋 Bienvenue ! Aucune donnée pour l'instant. Va dans l'onglet 'Passer un Quiz' pour commencer.")
     else:
-        col1, col2 = st.columns(2)
+        # 1. Indicateurs (BEST & WORST)
+        best_txt, worst_txt = get_best_worst()
+        
+        col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Tests réalisés", len(st.session_state.history))
+            st.metric("Quiz réalisés", len(st.session_state.history))
         with col2:
-            st.metric("Moyenne Générale", f"{stats['score_percent'].mean():.1f}%")
+            st.metric("🏆 Meilleur Score", best_txt)
+        with col3:
+            st.metric("⚠️ Pire Score", worst_txt)
         
         st.write("---")
         
         col_graph1, col_graph2 = st.columns(2)
+        
+        # 2. Graphique Bâtons (Moyenne par Module SUR 20)
         with col_graph1:
-            st.subheader("📈 Moyenne par matière")
-            fig_bar = px.bar(stats, x='module', y='score_percent', range_y=[0, 100], 
-                         labels={'score_percent': 'Note Moyenne (%)'},
-                         color='score_percent', color_continuous_scale='Bluered')
+            st.subheader("📈 Moyenne par matière (/20)")
+            fig_bar = px.bar(stats, x='module', y='note_20', range_y=[0, 20], 
+                         labels={'note_20': 'Note sur 20'},
+                         color='note_20', color_continuous_scale='Bluered')
             st.plotly_chart(fig_bar, use_container_width=True)
 
+        # 3. Graphique Évolution (SUR 20 et AXE X ENTIER)
         with col_graph2:
-            st.subheader("🚀 Évolution de tes notes")
+            st.subheader("🚀 Évolution des notes")
             df_hist = pd.DataFrame(st.session_state.history)
+            df_hist['note_20'] = df_hist['score_percent'] / 5
             df_hist['Essai'] = range(1, len(df_hist) + 1)
-            fig_line = px.line(df_hist, x='Essai', y='score_percent', color='module', markers=True,
-                               range_y=[0, 105],
-                               labels={'Essai': 'Ordre des Quiz', 'score_percent': 'Note (%)'},
+            
+            fig_line = px.line(df_hist, x='Essai', y='note_20', color='module', markers=True,
+                               range_y=[0, 21], # Un peu plus que 20 pour ne pas couper le point
+                               labels={'Essai': 'Numéro du Quiz', 'note_20': 'Note / 20'},
                                title="Progression au fil des essais")
+            
+            # Force l'axe X à n'afficher que des entiers (1, 2, 3...)
+            fig_line.update_xaxes(dtick=1)
+            
             st.plotly_chart(fig_line, use_container_width=True)
         
         st.write("---")
@@ -529,97 +591,91 @@ if menu == "Tableau de Bord":
 # PAGE 2 : QUIZ (MODE ALÉATOIRE)
 # =========================================================
 elif menu == "Passer un Quiz":
-    
+    st.sidebar.header("🎯 Nouveau Tirage")
     module_choisi = st.sidebar.selectbox("Choisir le module :", list(db_questions.keys()))
     
-    # BOUTON POUR LANCER UN NOUVEAU QUIZ
-    if st.sidebar.button("NOUVEAU QUIZ (20 Q)", type="primary"):
+    if st.sidebar.button("🎲 GÉNÉRER UN NOUVEAU QUIZ (15 Q)", type="primary"):
         generer_nouveau_quiz(module_choisi)
         st.rerun()
 
-    # Si c'est la première fois qu'on arrive ou si on change de module via le menu sans cliquer sur le bouton
     if 'active_module' not in st.session_state or st.session_state.active_module != module_choisi:
         generer_nouveau_quiz(module_choisi)
     
-    # Affichage du Quiz
     st.title(f"📝 {module_choisi}")
-    st.caption(f"Série aléatoire de {len(st.session_state.quiz_batch)} questions tirées de la base de données.")
     
-    # On utilise le batch stocké en mémoire (pour qu'il ne change pas à chaque clic)
-    questions = st.session_state.quiz_batch
-    
-    for i, q in enumerate(questions):
-        st.markdown(f"<div class='question-card'><h5>Question {i+1} <span style='background:#eee;padding:2px 5px;border-radius:5px;font-size:0.7em'>{q['tag']}</span></h5>", unsafe_allow_html=True)
-        st.write(f"**{q['q']}**")
-        # On utilise le q['q'] comme partie de la clé pour qu'elle soit unique même si l'ordre change
-        q_hash = hash(q['q']) 
-        q_id = f"{module_choisi}_{q_hash}"
+    if not st.session_state.quiz_batch:
+        st.warning("Aucune question chargée. Clique sur 'Générer un nouveau quiz'.")
+    else:
+        st.caption(f"Série aléatoire de {len(st.session_state.quiz_batch)} questions.")
+        questions = st.session_state.quiz_batch
         
-        if q["type"] == "qcm":
-            user_choice = st.radio("Réponse :", q["options"], key=f"radio_{q_id}", index=None)
-            if st.button(f"Valider", key=f"btn_{q_id}"):
-                st.session_state.show_explanation[q_id] = True
-                if q_id not in st.session_state.validated_questions:
-                    st.session_state.validated_questions.add(q_id)
+        for i, q in enumerate(questions):
+            st.markdown(f"<div class='question-card'><h5>Question {i+1} <span style='background:#eee;padding:2px 5px;border-radius:5px;font-size:0.7em'>{q['tag']}</span></h5>", unsafe_allow_html=True)
+            st.write(f"**{q['q']}**")
+            q_hash = hash(q['q']) 
+            q_id = f"{module_choisi}_{q_hash}"
+            
+            if q["type"] == "qcm":
+                user_choice = st.radio("Réponse :", q["options"], key=f"radio_{q_id}", index=None)
+                if st.button(f"Valider", key=f"btn_{q_id}"):
+                    st.session_state.show_explanation[q_id] = True
+                    if q_id not in st.session_state.validated_questions:
+                        st.session_state.validated_questions.add(q_id)
+                        if user_choice == q["answer"]:
+                            st.session_state.current_score += 1
+                        else:
+                            st.session_state.current_mistakes.append(q["tag"])
+                
+                if st.session_state.show_explanation.get(q_id):
                     if user_choice == q["answer"]:
-                        st.session_state.current_score += 1
+                        st.success("Correct !")
                     else:
-                        st.session_state.current_mistakes.append(q["tag"])
-            
-            if st.session_state.show_explanation.get(q_id):
-                if user_choice == q["answer"]:
-                    st.success("Correct !")
-                else:
-                    st.error(f"Faux. Réponse : {q['answer']}")
-                st.info(f"💡 {q['explanation']}")
+                        st.error(f"Faux. Réponse : {q['answer']}")
+                    st.info(f"💡 {q['explanation']}")
 
-        elif q["type"] == "ouverte":
-            st.text_area("Ta réflexion :", key=f"txt_{q_id}")
-            if st.button(f"Vérifier", key=f"btn_{q_id}"):
-                st.session_state.show_explanation[q_id] = True
-                if q_id not in st.session_state.validated_questions:
-                    st.session_state.validated_questions.add(q_id)
-            
-            if st.session_state.show_explanation.get(q_id):
-                st.markdown(f"<div class='feedback-box'>✅ <b>Réponse attendue :</b> {q['answer']}<br><i>(Auto-évaluation)</i></div>", unsafe_allow_html=True)
-                col_a, col_b = st.columns(2)
-                if f"eval_{q_id}" not in st.session_state:
-                    if col_a.button("J'ai eu bon ✅", key=f"good_{q_id}"):
-                        st.session_state.current_score += 1
-                        st.session_state[f"eval_{q_id}"] = True
-                        st.rerun()
-                    if col_b.button("J'ai eu faux ❌", key=f"bad_{q_id}"):
-                        st.session_state.current_mistakes.append(q["tag"])
-                        st.session_state[f"eval_{q_id}"] = True
-                        st.rerun()
-        st.markdown("---")
+            elif q["type"] == "ouverte":
+                st.text_area("Ta réflexion :", key=f"txt_{q_id}")
+                if st.button(f"Vérifier", key=f"btn_{q_id}"):
+                    st.session_state.show_explanation[q_id] = True
+                    if q_id not in st.session_state.validated_questions:
+                        st.session_state.validated_questions.add(q_id)
+                
+                if st.session_state.show_explanation.get(q_id):
+                    st.markdown(f"<div class='feedback-box'>✅ <b>Réponse attendue :</b> {q['answer']}<br><i>(Auto-évaluation)</i></div>", unsafe_allow_html=True)
+                    col_a, col_b = st.columns(2)
+                    if f"eval_{q_id}" not in st.session_state:
+                        if col_a.button("J'ai eu bon ✅", key=f"good_{q_id}"):
+                            st.session_state.current_score += 1
+                            st.session_state[f"eval_{q_id}"] = True
+                            st.rerun()
+                        if col_b.button("J'ai eu faux ❌", key=f"bad_{q_id}"):
+                            st.session_state.current_mistakes.append(q["tag"])
+                            st.session_state[f"eval_{q_id}"] = True
+                            st.rerun()
+            st.markdown("---")
 
-    if st.button("🏁 TERMINER CE TEST", type="primary"):
-        total_q = len(questions)
-        score = st.session_state.current_score
-        percent = (score / total_q) * 100
-        
-        st.session_state.history.append({
-            "module": module_choisi, 
-            "score": score, 
-            "total": total_q,
-            "score_percent": percent, 
-            "mistakes": st.session_state.current_mistakes,
-            "date": datetime.now()
-        })
-        st.balloons()
-        
-        st.markdown(f"""
-        <div style="background-color:#d4edda;padding:20px;border-radius:10px;text-align:center;">
-            <h2>Score : {score}/{total_q}</h2>
-            <h3>Note : {percent:.0f}/20</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if st.session_state.current_mistakes:
-            st.write("### 🔍 Sur cette série, revois ces points :")
-            from collections import Counter
-            for tag, count in Counter(st.session_state.current_mistakes).items():
-                st.markdown(f"- **{tag}** ({count} fautes)")
-        
-        st.info("Résultat enregistré ! Clique sur 'Générer un nouveau quiz' à gauche pour relancer une série différente.")
+        if st.button("🏁 TERMINER CE TEST", type="primary"):
+            total_q = len(questions)
+            score = st.session_state.current_score
+            percent = (score / total_q) * 100
+            
+            st.session_state.history.append({
+                "module": module_choisi, 
+                "score": score, 
+                "total": total_q,
+                "score_percent": percent, 
+                "mistakes": st.session_state.current_mistakes,
+                "date": str(datetime.now())
+            })
+            st.balloons()
+            
+            note_sur_20 = score / total_q * 20
+            
+            st.markdown(f"""
+            <div style="background-color:#d4edda;padding:20px;border-radius:10px;text-align:center;">
+                <h2>Score : {score}/{total_q}</h2>
+                <h3>Note : {note_sur_20:.1f}/20</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.info("Résultat enregistré ! Pense à sauvegarder ta progression dans le menu de gauche.")
