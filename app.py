@@ -1,495 +1,276 @@
 import streamlit as st
-
-import random
-
-
+import pandas as pd
+import plotly.express as px
 
 # --- CONFIGURATION DE LA PAGE ---
+st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
-st.set_page_config(page_title="Psychomot' Master - Partiels Blancs", page_icon="🧠", layout="wide")
-
-
-
-# --- CSS PRO & STYLE ---
-
+# --- CSS PRO ---
 st.markdown("""
-
 <style>
-
-    .stButton>button {
-
-        width: 100%;
-
-        border-radius: 8px;
-
-        height: 3em;
-
-        font-weight: bold;
-
-        transition: all 0.3s;
-
-    }
-
-    .stButton>button:hover {
-
-        transform: scale(1.02);
-
-    }
-
-    .correction-box {
-
-        padding: 20px;
-
-        border-radius: 10px;
-
-        margin-top: 15px;
-
-        background-color: #e3f2fd;
-
-        border-left: 5px solid #1565c0;
-
-        color: #0d47a1;
-
-        font-size: 1.05em;
-
-    }
-
-    .question-card {
-
-        background-color: #ffffff;
-
-        padding: 25px;
-
-        border-radius: 15px;
-
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-
-        margin-bottom: 25px;
-
-        border: 1px solid #eee;
-
-    }
-
+    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; }
+    .metric-card { background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #4e73df; text-align: center; }
+    .feedback-box { padding: 15px; border-radius: 10px; margin-top: 10px; background-color: #e8f4f8; border-left: 5px solid #2e86de; color: #1e3799; }
+    .weakness-tag { background-color: #ffcccc; color: #cc0000; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; margin: 2px; display: inline-block; }
     h1, h2, h3 { color: #2c3e50; }
-
-    .tag-badge {
-
-        background-color: #e0e0e0;
-
-        color: #333;
-
-        padding: 2px 8px;
-
-        border-radius: 12px;
-
-        font-size: 0.75em;
-
-        margin-left: 10px;
-
-    }
-
 </style>
-
 """, unsafe_allow_html=True)
 
-
-
-# --- BASE DE DONNÉES MASSIVE (Générée depuis les PDF) ---
-
+# --- BASE DE DONNÉES MASSIVE (INTEGRALE) ---
 db_questions = {
-
     "MODULE 1: Santé Pub, Pharma, Hygiène": [
-
         # PHARMACOLOGIE
-
-        {"q": "Dans le système ADME, à quoi correspond la lettre 'D' ?", "options": ["Digestion", "Dilution", "Distribution", "Dynamisation"], "answer": "Distribution", "type": "qcm", "explanation": "ADME = Absorption, Distribution (transport dans le sang vers les tissus), Métabolisme, Élimination.", "tag": "Pharma"},
-
-        {"q": "Quelle est la définition de la biodisponibilité ?", "options": ["La vitesse d'élimination du médicament", "La fraction de la dose administrée qui atteint la circulation générale sous forme inchangée", "La toxicité du produit", "Le volume de distribution"], "answer": "La fraction de la dose administrée qui atteint la circulation générale sous forme inchangée", "type": "qcm", "explanation": "Par voie IV, la biodisponibilité est de 100%. Par voie orale, elle est < 100% à cause de l'effet de premier passage hépatique.", "tag": "Pharma"},
-
-        {"q": "Qu'est-ce que l'effet de premier passage hépatique ?", "type": "ouverte", "answer": "La perte de principe actif lors de son premier passage par le foie (via la veine porte) avant d'atteindre la circulation générale.", "explanation": "Le foie métabolise/dégrade une partie du médicament absorbé par voie digestive.", "tag": "Pharma"},
-
-        {"q": "Quelle est la différence entre un médicament Princeps et un Générique ?", "type": "ouverte", "answer": "Le Princeps est l'original breveté. Le Générique est sa copie (même principe actif, même dosage) commercialisée après la chute du brevet.", "explanation": "Les excipients peuvent changer, mais la bioéquivalence doit être prouvée.", "tag": "Pharma"},
-
-        {"q": "Qu'est-ce qu'un excipient ?", "options": ["Le principe actif", "Une substance inactive aidant à la formulation (goût, forme, conservation)", "Un effet secondaire", "Un antidote"], "answer": "Une substance inactive aidant à la formulation (goût, forme, conservation)", "type": "qcm", "explanation": "Exemples : sucre, amidon, colorants. Certains ont des 'effets notoires' (allergies).", "tag": "Pharma"},
-
-        {"q": "Définition de la demi-vie d'élimination (T1/2).", "type": "ouverte", "answer": "Temps nécessaire pour que la concentration plasmatique du médicament diminue de moitié (50%).", "explanation": "Il faut environ 5 à 7 demi-vies pour éliminer totalement le produit.", "tag": "Pharma"},
-
-        {"q": "Qu'est-ce que la clairance ?", "options": ["Volume de plasma totalement épuré d'une substance par unité de temps", "Quantité d'urine par jour", "Vitesse de perfusion"], "answer": "Volume de plasma totalement épuré d'une substance par unité de temps", "type": "qcm", "explanation": "La clairance rénale (créatinine) évalue la fonction rénale.", "tag": "Pharma"},
-
-        {"q": "Citez 3 voies d'administration parentérales.", "type": "ouverte", "answer": "Intraveineuse (IV), Intramusculaire (IM), Sous-cutanée (SC), Intradermique.", "explanation": "Parentérale = 'à côté du tube digestif' (injections).", "tag": "Pharma"},
-
+        {"q": "Dans le système ADME, à quoi correspond la lettre 'D' ?", "options": ["Digestion", "Dilution", "Distribution", "Dynamisation"], "answer": "Distribution", "type": "qcm", "explanation": "ADME = Absorption, Distribution, Métabolisme, Élimination.", "tag": "Pharmacologie"},
+        {"q": "Quelle est la définition de la biodisponibilité ?", "options": ["Vitesse d'élimination", "Fraction de la dose atteignant la circulation générale sous forme inchangée", "Toxicité", "Volume de distribution"], "answer": "Fraction de la dose atteignant la circulation générale sous forme inchangée", "type": "qcm", "explanation": "100% en IV, moins en per os (premier passage hépatique).", "tag": "Pharmacologie"},
+        {"q": "Qu'est-ce que l'effet de premier passage hépatique ?", "type": "ouverte", "answer": "Perte de principe actif lors du passage par le foie avant d'atteindre la circulation générale.", "explanation": "Le foie dégrade une partie du médicament absorbé.", "tag": "Pharmacologie"},
+        {"q": "Différence Princeps / Générique ?", "type": "ouverte", "answer": "Princeps = Original breveté. Générique = Copie (même PA, même dosage) après chute du brevet.", "explanation": "Bioéquivalence obligatoire.", "tag": "Pharmacologie"},
+        {"q": "Qu'est-ce qu'un excipient ?", "options": ["Principe actif", "Substance inactive (forme/goût)", "Poison"], "answer": "Substance inactive (forme/goût)", "type": "qcm", "explanation": "Sert à la fabrication et conservation (ex: amidon, sucre).", "tag": "Pharmacologie"},
+        {"q": "Demi-vie d'élimination (T1/2) ?", "type": "ouverte", "answer": "Temps nécessaire pour que la concentration plasmatique diminue de 50%.", "explanation": "Il faut 5 à 7 demi-vies pour éliminer le produit.", "tag": "Pharmacologie"},
+        {"q": "Clairance rénale ?", "options": ["Volume de plasma épuré par unité de temps", "Volume d'urine"], "answer": "Volume de plasma épuré par unité de temps", "type": "qcm", "explanation": "Mesure la fonction rénale.", "tag": "Pharmacologie"},
         
-
         # SANTÉ PUBLIQUE & HISTOIRE
-
-        {"q": "Loi Kouchner (4 mars 2002) : Apport principal ?", "options": ["Création de la Sécu", "Droits des malades (dossier médical, consentement) et qualité du système de santé", "Loi sur l'avortement"], "answer": "Droits des malades (dossier médical, consentement) et qualité du système de santé", "type": "qcm", "explanation": "Marque la fin du paternalisme médical. Le patient devient acteur.", "tag": "Loi"},
-
-        {"q": "Quelle loi de 1838 a structuré la psychiatrie ?", "options": ["Loi sur les asiles (un par département)", "Loi sur les médicaments", "Loi HPST"], "answer": "Loi sur les asiles (un par département)", "type": "qcm", "explanation": "Loi Esquirol : obligation pour chaque département d'avoir un asile d'aliénés.", "tag": "Histoire"},
-
-        {"q": "Lois Jules Ferry (1881-1882) : Que font-elles ?", "options": ["École laïque, gratuite et obligatoire", "Droit de vote des femmes", "Séparation Église/État"], "answer": "École laïque, gratuite et obligatoire", "type": "qcm", "explanation": "Fondement de l'école républicaine.", "tag": "Histoire"},
-
-        {"q": "Définition de la santé selon l'OMS (1946).", "type": "ouverte", "answer": "État de complet bien-être physique, mental et social, et ne consiste pas seulement en une absence de maladie ou d'infirmité.", "explanation": "Définition positive et globale (bio-psycho-sociale).", "tag": "Concept"},
-
-        {"q": "Qu'est-ce que la PMI ?", "options": ["Protection Médicale Interne", "Protection Maternelle et Infantile", "Pôle Médical Infirmier"], "answer": "Protection Maternelle et Infantile", "type": "qcm", "explanation": "Service départemental (créé en 1945) pour la santé des mères et des enfants (0-6 ans).", "tag": "Santé Pub"},
-
+        {"q": "Loi Kouchner (2002) : Apport principal ?", "options": ["Sécu", "Droits des malades & Qualité du système", "Avortement"], "answer": "Droits des malades & Qualité du système", "type": "qcm", "explanation": "Fin du paternalisme, accès au dossier médical.", "tag": "Législation"},
+        {"q": "Loi de 1838 ?", "options": ["Secteur", "Asiles départementaux"], "answer": "Asiles départementaux", "type": "qcm", "explanation": "Loi Esquirol : obligation d'un asile par département.", "tag": "Histoire"},
+        {"q": "Lois Jules Ferry (1881-1882) ?", "options": ["École laïque, gratuite, obligatoire", "Vote des femmes"], "answer": "École laïque, gratuite, obligatoire", "type": "qcm", "explanation": "Fondement école républicaine.", "tag": "Histoire"},
+        {"q": "Définition de la santé (OMS 1946) ?", "type": "ouverte", "answer": "État de complet bien-être physique, mental et social (pas seulement absence de maladie).", "explanation": "Approche bio-psycho-sociale.", "tag": "Concept"},
+        {"q": "Rôle de la PMI ?", "options": ["Protection Maternelle et Infantile", "Police Médicale"], "answer": "Protection Maternelle et Infantile", "type": "qcm", "explanation": "Suivi 0-6 ans.", "tag": "Santé Pub"},
         
-
         # HYGIÈNE
-
-        {"q": "Qu'est-ce qu'une Infection Associée aux Soins (IAS) ?", "type": "ouverte", "answer": "Infection acquise au cours d'une prise en charge (ni présente ni en incubation à l'admission). Délai > 48h.", "explanation": "Inclut les infections nosocomiales (hôpital) mais aussi en cabinet libéral, EHPAD, etc.", "tag": "Hygiène"},
-
-        {"q": "Quelle est la durée d'une friction SHA (Solution Hydro-Alcoolique) ?", "options": ["10 sec", "30 sec (ou jusqu'à séchage)", "2 min"], "answer": "30 sec (ou jusqu'à séchage)", "type": "qcm", "explanation": "Efficacité maximale sur mains visuellement propres.", "tag": "Hygiène"},
-
-        {"q": "Différence entre Asepsie et Antisepsie ?", "type": "ouverte", "answer": "Asepsie = Préventif (empêcher les microbes d'arriver). Antisepsie = Curatif/Action (éliminer les microbes sur tissus vivants).", "explanation": "On aseptise un bloc opératoire (l'environnement), on fait une antisepsie sur la peau du patient.", "tag": "Hygiène"},
-
-        {"q": "Que signifie DASRI ?", "options": ["Déchets d'Activités de Soins à Risques Infectieux", "Déchets Alimentaires Sans Risque", "Déchets Assimilés aux Soins"], "answer": "Déchets d'Activités de Soins à Risques Infectieux", "type": "qcm", "explanation": "Poubelles jaunes (piquants, coupants, sang, risques bio).", "tag": "Hygiène"},
-
-        {"q": "Quels sont les 5 moments de l'hygiène des mains (OMS) ?", "type": "ouverte", "answer": "1. Avant contact patient, 2. Avant geste aseptique, 3. Après risque liquide biologique, 4. Après contact patient, 5. Après contact environnement.", "explanation": "La friction SHA est la méthode de référence.", "tag": "Hygiène"},
-
-        {"q": "Qu'est-ce qu'un biofilm ?", "type": "ouverte", "answer": "Communauté de micro-organismes adhérant entre eux et à une surface, sécrétant une matrice protectrice.", "explanation": "Très résistant aux désinfectants (ex: sur prothèses, cathéters).", "tag": "Hygiène"},
-
+        {"q": "Durée friction SHA ?", "options": ["10 sec", "30 sec", "2 min"], "answer": "30 sec", "type": "qcm", "explanation": "Jusqu'à séchage complet.", "tag": "Hygiène"},
+        {"q": "Signification DASRI ?", "options": ["Déchets d'Activités de Soins à Risques Infectieux", "Déchets Assimilés", "Déchets Aseptisés"], "answer": "Déchets d'Activités de Soins à Risques Infectieux", "type": "qcm", "explanation": "Bacs jaunes (piquants/coupants/sang).", "tag": "Hygiène"},
+        {"q": "Définition Infection Nosocomiale (IAS) ?", "type": "ouverte", "answer": "Infection contractée lors d'un soin, absente à l'admission. Délai > 48h.", "explanation": "Si < 48h = communautaire.", "tag": "Hygiène"},
+        {"q": "Asepsie vs Antisepsie ?", "type": "ouverte", "answer": "Asepsie = Préventif (empêcher microbes d'entrer). Antisepsie = Curatif (tuer microbes sur tissus vivants).", "explanation": "On aseptise un local, on fait une antisepsie d'une plaie.", "tag": "Hygiène"},
+        {"q": "Les 5 moments hygiène des mains ?", "type": "ouverte", "answer": "Avant patient, Avant geste aseptique, Après liquide bio, Après patient, Après environnement.", "explanation": "OMS.", "tag": "Hygiène"},
     ],
-
-
 
     "MODULE 2: Anatomie & Neuroanatomie": [
-
-        # OSTEOLOGIE RACHIS & TRONC
-
-        {"q": "Quelles sont les courbures du rachis dans le plan sagittal ?", "type": "ouverte", "answer": "Lordose cervicale, Cyphose thoracique, Lordose lombaire, Cyphose sacrée.", "explanation": "Lordose = creux (concave en arrière). Cyphose = bosse (convexe en arrière).", "tag": "Rachis"},
-
-        {"q": "Combien de vertèbres cervicales ?", "options": ["5", "7", "12"], "answer": "7", "type": "qcm", "explanation": "C1 à C7. (Attention, il y a 8 nerfs cervicaux mais 7 vertèbres).", "tag": "Rachis"},
-
-        {"q": "Quel est le nom de C1 et C2 ?", "options": ["Atlas et Axis", "Axis et Atlas", "Atlas et Prominens"], "answer": "Atlas et Axis", "type": "qcm", "explanation": "C1 Atlas porte la tête. C2 Axis possède la dent (processus odontoïde) pour la rotation.", "tag": "Rachis"},
-
-        {"q": "Qu'est-ce que le médiastin ?", "type": "ouverte", "answer": "La région médiane du thorax, située entre les deux poumons.", "explanation": "Contient le cœur, l'œsophage, la trachée, les gros vaisseaux.", "tag": "Thorax"},
-
+        # OSTEOLOGIE
+        {"q": "Courbures du rachis (Sagittal) ?", "type": "ouverte", "answer": "Lordose cervicale, Cyphose thoracique, Lordose lombaire, Cyphose sacrée.", "explanation": "Lordose = creux, Cyphose = bosse.", "tag": "Rachis"},
+        {"q": "Nombre de vertèbres cervicales ?", "options": ["5", "7", "12"], "answer": "7", "type": "qcm", "explanation": "C1 à C7.", "tag": "Rachis"},
+        {"q": "Noms de C1 et C2 ?", "options": ["Atlas et Axis", "Axis et Atlas"], "answer": "Atlas et Axis", "type": "qcm", "explanation": "Atlas porte la tête.", "tag": "Rachis"},
+        {"q": "Os du carpe (Rangée 1) ?", "type": "ouverte", "answer": "Scaphoïde, Lunatum, Triquetrum, Pisiforme.", "explanation": "Rangée proximale, de dehors en dedans.", "tag": "Membre Sup"},
+        {"q": "Muscles coiffe des rotateurs ?", "type": "ouverte", "answer": "Supra-épineux, Infra-épineux, Petit rond, Subscapulaire.", "explanation": "Stabilisateurs de l'épaule.", "tag": "Membre Sup"},
+        {"q": "Nerf 'petit juif' au coude ?", "options": ["Radial", "Ulnaire", "Médian"], "answer": "Ulnaire", "type": "qcm", "explanation": "Passe dans la gouttière épitrochléenne.", "tag": "Membre Sup"},
+        {"q": "Os coxal composé de ?", "options": ["Ilion, Ischion, Pubis", "Sacrum, Coccyx", "Fémur"], "answer": "Ilion, Ischion, Pubis", "type": "qcm", "explanation": "Fusion au niveau de l'acétabulum.", "tag": "Membre Inf"},
+        {"q": "Garden III (Col fémur) ?", "options": ["Non déplacée", "Déplacée en varus (charnière conservée)", "Tête libre"], "answer": "Déplacée en varus (charnière conservée)", "type": "qcm", "explanation": "Risque de nécrose tête fémorale.", "tag": "Trauma"},
+        {"q": "Triade terrible du coude ?", "type": "ouverte", "answer": "Luxation coude + Fracture tête radiale + Fracture processus coronoïde.", "explanation": "Très instable.", "tag": "Trauma"},
         
-
-        # MEMBRE SUPÉRIEUR
-
-        {"q": "Citez les os du Carpe (poignet).", "type": "ouverte", "answer": "Scaphoïde, Lunatum, Triquetrum, Pisiforme (Rangée 1) / Trapèze, Trapézoïde, Capitatum, Hamatum (Rangée 2).", "explanation": "Mnémotechnique : 'Sous Le Temps Pluvieux, Tu Te Captures Hâtivement' (ou autre).", "tag": "Membre Sup"},
-
-        {"q": "Quels sont les muscles de la coiffe des rotateurs ?", "type": "ouverte", "answer": "Supra-épineux, Infra-épineux, Petit rond, Subscapulaire.", "explanation": "Ils stabilisent la tête humérale dans la glène.", "tag": "Membre Sup"},
-
-        {"q": "Où se situe le nerf ulnaire au niveau du coude ?", "options": ["Dans la gouttière épitrochléenne (médial)", "En avant du biceps", "En dehors"], "answer": "Dans la gouttière épitrochléenne (médial)", "type": "qcm", "explanation": "C'est le 'petit juif' quand on se cogne le coude.", "tag": "Membre Sup"},
-
-        {"q": "Quel mouvement permet le Biceps Brachial ?", "options": ["Extension coude", "Flexion coude + Supination", "Pronation"], "answer": "Flexion coude + Supination", "type": "qcm", "explanation": "C'est le principal supinateur coude fléchi.", "tag": "Myologie"},
-
-
-
-        # MEMBRE INFÉRIEUR
-
-        {"q": "Quels os forment l'os coxal (bassin) ?", "options": ["Ilion, Ischion, Pubis", "Sacrum, Coccyx", "Fémur, Tibia"], "answer": "Ilion, Ischion, Pubis", "type": "qcm", "explanation": "Ils se réunissent au niveau de l'acétabulum (cotyle) à la puberté.", "tag": "Membre Inf"},
-
-        {"q": "Qu'est-ce que l'acétabulum ?", "type": "ouverte", "answer": "La cavité articulaire de l'os coxal qui reçoit la tête du fémur.", "explanation": "Forme une énarthrose (sphéroïde).", "tag": "Membre Inf"},
-
-        {"q": "Quels sont les ligaments croisés du genou ?", "type": "ouverte", "answer": "LCA (Antérieur) et LCP (Postérieur).", "explanation": "Ils assurent la stabilité antéro-postérieure (pivot central).", "tag": "Genou"},
-
-        {"q": "Quel os est sésamoïde dans le genou ?", "options": ["La Patella (Rotule)", "Le Fémur", "Le Tibia"], "answer": "La Patella (Rotule)", "type": "qcm", "explanation": "Inclus dans le tendon du quadriceps.", "tag": "Genou"},
-
-        {"q": "Classification de Garden (Fractures col fémur) : Garden III ?", "options": ["Non déplacée", "Engrenée valgus", "Déplacée en varus, charnière conservée", "Totalement déplacée, tête libre"], "answer": "Déplacée en varus, charnière conservée", "type": "qcm", "explanation": "Risque de nécrose de la tête fémorale.", "tag": "Trauma"},
-
-
-
-        # CRÂNE & NEUROANATOMIE
-
-        {"q": "Combien d'os composent le crâne (boîte crânienne) ?", "options": ["8", "14", "22"], "answer": "8", "type": "qcm", "explanation": "Frontal, Occipital, 2 Pariétaux, 2 Temporaux, Sphénoïde, Ethmoïde.", "tag": "Crâne"},
-
-        {"q": "Quel est le seul os mobile de la face ?", "answer": "La Mandibule", "type": "qcm", "options": ["Maxillaire", "Mandibule", "Zygomatique"], "explanation": "Articulée avec l'os temporal (ATM).", "tag": "Face"},
-
-        {"q": "Où se situe le Liquide Cérébro-Spinal (LCS) ?", "options": ["Espace épidural", "Espace sous-arachnoïdien", "Espace sous-dural"], "answer": "Espace sous-arachnoïdien", "type": "qcm", "explanation": "Entre l'arachnoïde et la pie-mère.", "tag": "Neuro"},
-
-        {"q": "Quel lobe cérébral gère la vision ?", "options": ["Frontal", "Pariétal", "Occipital", "Temporal"], "answer": "Occipital", "type": "qcm", "explanation": "Cortex visuel primaire (V1).", "tag": "Neuro"},
-
-        {"q": "Rôle du Cervelet ?", "type": "ouverte", "answer": "Équilibre, Coordination des mouvements, Tonus, Apprentissage moteur.", "explanation": "C'est le 'chef d'orchestre' de la motricité fine.", "tag": "Neuro"},
-
-        {"q": "De quoi est composé le Système Nerveux Central (SNC) ?", "options": ["Cerveau + Nerfs", "Encéphale + Moelle épinière", "Juste le cerveau"], "answer": "Encéphale + Moelle épinière", "type": "qcm", "explanation": "L'encéphale comprend Cerveau, Cervelet, Tronc cérébral.", "tag": "Neuro"},
-
+        # NEURO
+        {"q": "Nombre os du crâne ?", "options": ["8", "14", "22"], "answer": "8", "type": "qcm", "explanation": "Frontal, Occipital, Sphénoïde, Ethmoïde, 2 Pariétaux, 2 Temporaux.", "tag": "Crâne"},
+        {"q": "Lobe de la vision ?", "options": ["Frontal", "Pariétal", "Occipital"], "answer": "Occipital", "type": "qcm", "explanation": "Cortex visuel primaire V1.", "tag": "Neuro"},
+        {"q": "Localisation LCS ?", "options": ["Sous-dural", "Sous-arachnoïdien"], "answer": "Sous-arachnoïdien", "type": "qcm", "explanation": "Entre arachnoïde et pie-mère.", "tag": "Neuro"},
+        {"q": "Composition SNC ?", "options": ["Encéphale + Moelle", "Cerveau + Nerfs"], "answer": "Encéphale + Moelle", "type": "qcm", "explanation": "Système Nerveux Central.", "tag": "Neuro"},
+        {"q": "Rôle Cervelet ?", "type": "ouverte", "answer": "Équilibre, Coordination, Tonus.", "explanation": "Chef d'orchestre motricité.", "tag": "Neuro"},
     ],
-
-
 
     "MODULE 3: Physiologie": [
-
         # CELLULE & NERF
-
-        {"q": "Qu'est-ce que l'homéostasie ?", "type": "ouverte", "answer": "Maintien de la stabilité du milieu intérieur (équilibre) malgré les variations extérieures.", "explanation": "Concerne pH, température, glycémie, etc.", "tag": "Général"},
-
-        {"q": "Potentiel d'action : Quel ion entre massivement lors de la dépolarisation ?", "options": ["Sodium (Na+)", "Potassium (K+)", "Chlore (Cl-)"], "answer": "Sodium (Na+)", "type": "qcm", "explanation": "Entrée rapide de Na+ rend l'intérieur de la cellule positif.", "tag": "Neurophy"},
-
-        {"q": "Qu'est-ce qu'une synapse ?", "type": "ouverte", "answer": "Zone de contact fonctionnelle entre deux neurones (ou neurone/muscle) permettant la transmission de l'influx.", "explanation": "Peut être électrique ou chimique (neurotransmetteurs).", "tag": "Neurophy"},
-
-
-
+        {"q": "Homéostasie ?", "type": "ouverte", "answer": "Maintien de la stabilité du milieu intérieur malgré les variations externes.", "explanation": "Température, pH, glycémie...", "tag": "Général"},
+        {"q": "Ion dépolarisation cellulaire ?", "options": ["Na+", "K+", "Cl-"], "answer": "Na+", "type": "qcm", "explanation": "Entrée massive de Sodium.", "tag": "Neurophy"},
+        {"q": "Synapse ?", "type": "ouverte", "answer": "Zone de contact fonctionnelle entre deux neurones permettant transmission influx.", "explanation": "Chimique ou électrique.", "tag": "Neurophy"},
+        
         # MUSCLE & CARDIO
-
-        {"q": "Protéines contractiles du muscle ?", "options": ["Actine et Myosine", "Collagène", "Kératine"], "answer": "Actine et Myosine", "type": "qcm", "explanation": "Le glissement des têtes de myosine sur l'actine raccourcit le sarcomère.", "tag": "Muscle"},
-
-        {"q": "Définition Systole / Diastole.", "type": "ouverte", "answer": "Systole = Contraction (éjection). Diastole = Relâchement (remplissage).", "explanation": "La pression artérielle se note Systolique/Diastolique.", "tag": "Cardio"},
-
-        {"q": "Où se situe le nœud sinusal (pacemaker naturel) ?", "options": ["Oreillette Droite", "Ventricule Gauche", "Septum"], "answer": "Oreillette Droite", "type": "qcm", "explanation": "Il donne le rythme de base (60-100 bpm).", "tag": "Cardio"},
-
-        {"q": "Quel vaisseau ramène le sang oxygéné des poumons au cœur ?", "options": ["Artère pulmonaire", "Veine pulmonaire", "Aorte"], "answer": "Veine pulmonaire", "type": "qcm", "explanation": "Piège ! C'est la seule veine riche en O2.", "tag": "Cardio"},
-
-
-
-        # RESPI, DIGESTIF, RENAL
-
-        {"q": "Qu'est-ce que l'hématose ?", "type": "ouverte", "answer": "Échanges gazeux (O2/CO2) entre l'air alvéolaire et le sang capillaire pulmonaire.", "explanation": "Le sang devient rouge vif (oxygéné).", "tag": "Respi"},
-
-        {"q": "Quel est le muscle inspirateur principal ?", "answer": "Le Diaphragme", "type": "qcm", "options": ["Intercostaux", "Diaphragme", "Abdominaux"], "explanation": "Innervé par le nerf phrénique.", "tag": "Respi"},
-
-        {"q": "Rôle de la bile ?", "options": ["Digérer les protéines", "Émulsionner les graisses (lipides)", "Réguler le sucre"], "answer": "Émulsionner les graisses (lipides)", "type": "qcm", "explanation": "Produite par le foie, stockée dans la vésicule.", "tag": "Digestif"},
-
-        {"q": "Unité fonctionnelle du rein ?", "options": ["Le néphron", "Le hile", "L'uretère"], "answer": "Le néphron", "type": "qcm", "explanation": "1 million par rein. Filtre le sang.", "tag": "Rénal"},
-
-        {"q": "Quelle hormone rénale stimule la production de globules rouges ?", "options": ["Rénine", "EPO (Érythropoïétine)", "Insuline"], "answer": "EPO (Érythropoïétine)", "type": "qcm", "explanation": "C'est pourquoi l'insuffisance rénale cause une anémie.", "tag": "Rénal"},
-
-        {"q": "Qu'est-ce que le DFG ?", "type": "ouverte", "answer": "Débit de Filtration Glomérulaire. Volume de sang filtré par le rein par minute.", "explanation": "Normal > 90 ml/min. Évalue le stade de l'insuffisance rénale.", "tag": "Rénal"},
-
+        {"q": "Protéines contractiles muscle ?", "options": ["Actine/Myosine", "Collagène/Élastine"], "answer": "Actine/Myosine", "type": "qcm", "explanation": "Glissement des filaments.", "tag": "Muscle"},
+        {"q": "Systole / Diastole ?", "type": "ouverte", "answer": "Systole = Contraction (éjection). Diastole = Relâchement (remplissage).", "explanation": "Cycle cardiaque.", "tag": "Cardio"},
+        {"q": "Pacemaker naturel ?", "options": ["Nœud Sinusal", "Nœud AV", "His"], "answer": "Nœud Sinusal", "type": "qcm", "explanation": "Oreillette Droite.", "tag": "Cardio"},
+        {"q": "Veine Pulmonaire : Sang riche en ?", "options": ["Oxygène", "CO2"], "answer": "Oxygène", "type": "qcm", "explanation": "Exception : veine ramène sang oxygéné au cœur gauche.", "tag": "Cardio"},
+        
+        # VISCERAL
+        {"q": "Hématose ?", "type": "ouverte", "answer": "Échanges gazeux O2/CO2 alvéolo-capillaires.", "explanation": "Poumon.", "tag": "Respi"},
+        {"q": "Muscle inspirateur principal ?", "answer": "Diaphragme", "type": "qcm", "options": ["Intercostaux", "Diaphragme", "Abdos"], "explanation": "Nerf phrénique.", "tag": "Respi"},
+        {"q": "Unité fonctionnelle rein ?", "options": ["Néphron", "Glomérule", "Hile"], "answer": "Néphron", "type": "qcm", "explanation": "Filtration du sang.", "tag": "Rénal"},
+        {"q": "Hormone rénale pour globules rouges ?", "options": ["EPO", "Rénine"], "answer": "EPO", "type": "qcm", "explanation": "Érythropoïétine.", "tag": "Rénal"},
+        {"q": "Rôle de la bile ?", "options": ["Émulsionner graisses", "Digérer sucre"], "answer": "Émulsionner graisses", "type": "qcm", "explanation": "Produite par foie.", "tag": "Digestif"},
     ],
-
-
 
     "MODULE 4: Psychologie": [
-
-        # PSYCHANALYSE FREUDIENNE
-
-        {"q": "Stade Oral (Freud) : Âge et enjeux ?", "type": "ouverte", "answer": "0-1 an. Zone buccale. Enjeux : Incorporation, relation à la mère (sein), plaisir/frustration.", "explanation": "Mode de relation anaclitique (dépendance).", "tag": "Freud"},
-
-        {"q": "Stade Anal : Âge et enjeux ?", "type": "ouverte", "answer": "1-3 ans. Contrôle sphinctérien. Enjeux : Maîtrise/Emprise, Don/Retenue, Autonomie/Opposition ('Non').", "explanation": "Pulsion sadique-anale.", "tag": "Freud"},
-
-        {"q": "Complexe d'Oedipe : Quel stade ?", "options": ["Oral", "Anal", "Phallique", "Latence"], "answer": "Phallique", "type": "qcm", "explanation": "3-6 ans. Désir pour le parent de sexe opposé, rivalité avec l'autre. Angoisse de castration.", "tag": "Freud"},
-
-        {"q": "Instances de la personnalité (2ème topique) ?", "options": ["Inconscient/Préconscient/Conscient", "Ça/Moi/Surmoi"], "answer": "Ça/Moi/Surmoi", "type": "qcm", "explanation": "Ça = Pulsions. Moi = Réalité/Médiateur. Surmoi = Interdits/Morale.", "tag": "Freud"},
-
-
-
-        # AUTEURS & CONCEPTS
-
-        {"q": "Stade du miroir : Auteur et concept ?", "type": "ouverte", "answer": "Wallon (et Lacan). 6-18 mois. L'enfant reconnaît son image, unifie son corps morcelé et construit son 'Je'.", "explanation": "Moment jubilatoire fondateur de l'identité.", "tag": "Wallon"},
-
-        {"q": "Qu'est-ce que l'Objet Transitionnel (Winnicott) ?", "type": "ouverte", "answer": "Première possession 'non-moi' (doudou) qui permet de supporter l'absence de la mère et de faire le lien entre réalité interne et externe.", "explanation": "Aire transitionnelle.", "tag": "Winnicott"},
-
-        {"q": "La préoccupation maternelle primaire (Winnicott) ?", "type": "ouverte", "answer": "État de sensibilité accrue de la mère (fin grossesse/début vie) lui permettant de s'identifier aux besoins du bébé.", "explanation": "Une 'maladie normale'.", "tag": "Winnicott"},
-
-        {"q": "Positions de Mélanie Klein ?", "options": ["Schizo-paranoïde puis Dépressive", "Orale puis Anale", "Sécure puis Insécure"], "answer": "Schizo-paranoïde puis Dépressive", "type": "qcm", "explanation": "Schizo-paranoïde (clivage bon/mauvais objet). Dépressive (objet total, culpabilité, réparation).", "tag": "Klein"},
-
-        {"q": "Fonction Alpha (Bion) ?", "type": "ouverte", "answer": "Capacité de la mère (rêverie) à transformer les éléments Bêta (sensations brutes, angoisses) du bébé en éléments Alpha (pensables, assimilables).", "explanation": "Le bébé introjecte cette fonction pour apprendre à penser.", "tag": "Bion"},
-
-        {"q": "Théorie de l'Attachement (Bowlby) : Définition.", "type": "ouverte", "answer": "Besoin primaire de lien affectif durable et sécurisant avec une figure de soin pour assurer la survie et la sécurité.", "explanation": "Base de sécurité pour explorer le monde.", "tag": "Bowlby"},
-
-        {"q": "Les 3 organisateurs de Spitz ?", "options": ["Sourire, Angoisse 8 mois, Le Non", "Marche, Parole, Propreté"], "answer": "Sourire, Angoisse 8 mois, Le Non", "type": "qcm", "explanation": "Étapes clés de la structuration du Moi.", "tag": "Spitz"},
-
-        {"q": "Piaget : Stade Sensorimoteur ?", "options": ["0-2 ans", "2-7 ans", "7-12 ans"], "answer": "0-2 ans", "type": "qcm", "explanation": "Intelligence pratique, basée sur l'action et les sens. Permanence de l'objet.", "tag": "Piaget"},
-
+        # FREUD
+        {"q": "Stade Oral (Freud) ?", "type": "ouverte", "answer": "0-1 an. Zone buccale. Incorporation. Relation anaclitique.", "explanation": "Plaisir de succion.", "tag": "Freud"},
+        {"q": "Stade Anal ?", "type": "ouverte", "answer": "1-3 ans. Sphincters. Maîtrise/Emprise. Don/Retenue.", "explanation": "Apprentissage propreté.", "tag": "Freud"},
+        {"q": "Complexe d'Oedipe (Âge) ?", "options": ["Oral", "Anal", "Phallique (3-6 ans)"], "answer": "Phallique (3-6 ans)", "type": "qcm", "explanation": "Désir parent opposé, rivalité même sexe.", "tag": "Freud"},
+        {"q": "Instances 2ème topique ?", "options": ["Ça/Moi/Surmoi", "Ics/Pcs/Cs"], "answer": "Ça/Moi/Surmoi", "type": "qcm", "explanation": "Ça=Pulsion, Moi=Réalité, Surmoi=Interdit.", "tag": "Freud"},
+        
+        # AUTEURS
+        {"q": "Stade du miroir (Auteur) ?", "type": "ouverte", "answer": "Wallon (et Lacan).", "explanation": "Unification du corps, construction du Je.", "tag": "Wallon"},
+        {"q": "Objet Transitionnel ?", "type": "ouverte", "answer": "Première possession non-moi (doudou). Aire transitionnelle.", "explanation": "Défense contre angoisse séparation.", "tag": "Winnicott"},
+        {"q": "Préoccupation Maternelle Primaire ?", "type": "ouverte", "answer": "État sensibilité mère fin grossesse pour s'adapter au bébé.", "explanation": "Maladie normale (Winnicott).", "tag": "Winnicott"},
+        {"q": "Positions Klein ?", "options": ["Schizo-paranoïde / Dépressive", "Orale / Anale"], "answer": "Schizo-paranoïde / Dépressive", "type": "qcm", "explanation": "Clivage puis ambivalence.", "tag": "Klein"},
+        {"q": "Fonction Alpha (Bion) ?", "type": "ouverte", "answer": "Transformation éléments Bêta (bruts) en Alpha (pensables) par la mère.", "explanation": "Capacité de rêverie.", "tag": "Bion"},
+        {"q": "Attachement (Bowlby) ?", "type": "ouverte", "answer": "Besoin primaire de lien affectif pour la sécurité et la survie.", "explanation": "Base de sécurité.", "tag": "Bowlby"},
+        {"q": "Stades Piaget ?", "type": "ouverte", "answer": "Sensorimoteur -> Préopératoire -> Opératoire Concret -> Formel.", "explanation": "Intelligence.", "tag": "Piaget"},
     ],
-
-
 
     "MODULE 5: Psychiatrie": [
-
-        # HISTOIRE & CADRE
-
-        {"q": "Qui a 'libéré les fous' de leurs chaînes (1793) ?", "options": ["Freud", "Pinel", "Charcot"], "answer": "Pinel", "type": "qcm", "explanation": "Naissance de la psychiatrie et du traitement moral.", "tag": "Histoire"},
-
-        {"q": "Loi de 1838 ?", "options": ["Création du secteur", "Création des asiles départementaux"], "answer": "Création des asiles départementaux", "type": "qcm", "explanation": "Esquirol. Institutionnalise l'enfermement.", "tag": "Histoire"},
-
-        {"q": "Qu'est-ce que la Sectorisation (1960) ?", "type": "ouverte", "answer": "Organisation géodémographique : une même équipe soigne la population d'une zone (secteur) à l'hôpital et à l'extérieur (CMP).", "explanation": "Continuité des soins, proximité, 'hors les murs'.", "tag": "Orga"},
-
-        {"q": "Différence HDT / HO (Loi 1990) devenus ASPDT / ASPBRE (Loi 2011) ?", "type": "ouverte", "answer": "Soins à la demande d'un tiers (famille) vs Soins sur décision du représentant de l'état (Préfet/Maire) pour ordre public.", "explanation": "Soins Sans Consentement.", "tag": "Loi"},
-
-
-
-        # SEMIOLOGIE & NOSOGRAPHIE
-
-        {"q": "Différence Névrose / Psychose (Classique) ?", "type": "ouverte", "answer": "Névrose : Conflit intrapsychique, réalité conservée, conscience du trouble. Psychose : Perte de contact avec la réalité, anosognosie, délire.", "explanation": "Névrose = Refoulement. Psychose = Déni/Forclusion.", "tag": "Nosographie"},
-
-        {"q": "Qu'est-ce qu'un délire ?", "type": "ouverte", "answer": "Conviction inébranlable en une idée fausse, en désaccord avec la réalité.", "explanation": "Mécanismes : Hallucinatoire, Interprétatif, Intuitif, Imaginatif.", "tag": "Sémio"},
-
-        {"q": "Symptômes négatifs de la schizophrénie ?", "type": "ouverte", "answer": "Apragmatisme (inactivité), Aboulie (manque de volonté), Émoussement affectif, Retrait social, Alogie.", "explanation": "Opposés aux symptômes positifs (délires, hallucinations).", "tag": "Schizo"},
-
-        {"q": "Triade de l'Autisme (ou Dyade DSM-5) ?", "type": "ouverte", "answer": "1. Déficit communication/interactions sociales. 2. Caractère restreint et répétitif des comportements/intérêts.", "explanation": "On ajoute souvent les particularités sensorielles.", "tag": "TSA"},
-
-        {"q": "Qu'est-ce que l'anhédonie ?", "options": ["Perte de l'élan vital", "Incapacité à ressentir du plaisir", "Tristesse"], "answer": "Incapacité à ressentir du plaisir", "type": "qcm", "explanation": "Symptôme clé de la dépression mélancolique.", "tag": "Sémio"},
-
-        {"q": "Qu'est-ce qu'une dysharmonie évolutive ?", "type": "ouverte", "answer": "Concept français (CFTMEA). Pathologie limite de l'enfant. Développement hétérogène, failles narcissiques, angoisses de séparation, instabilité.", "explanation": "Ni tout à fait névrose, ni psychose.", "tag": "Pédopsy"},
-
-        {"q": "Définition de l'addiction ?", "type": "ouverte", "answer": "Impossibilité répété de contrôler un comportement et la poursuite de ce comportement malgré la connaissance de ses conséquences négatives.", "explanation": "Circuit de la récompense perturbé. Craving.", "tag": "Addicto"},
-
+        # HISTOIRE & ORGA
+        {"q": "Pinel (1793) ?", "options": ["Libération aliénés", "Hypnose"], "answer": "Libération aliénés", "type": "qcm", "explanation": "Naissance psychiatrie moderne.", "tag": "Histoire"},
+        {"q": "Loi 1838 ?", "answer": "Asiles départementaux", "type": "qcm", "options": ["Secteur", "Asiles"], "explanation": "Enfermement.", "tag": "Histoire"},
+        {"q": "Sectorisation ?", "type": "ouverte", "answer": "Organisation géo : même équipe soigne population d'une zone (Hôpital + CMP).", "explanation": "Continuité des soins.", "tag": "Orga"},
+        
+        # PATHO
+        {"q": "Névrose vs Psychose ?", "type": "ouverte", "answer": "Névrose = Réalité conservée, Conflit. Psychose = Perte réalité, Délire, Anosognosie.", "explanation": "Refoulement vs Forclusion.", "tag": "Nosographie"},
+        {"q": "Délire ?", "type": "ouverte", "answer": "Conviction inébranlable en une idée fausse, hors réalité.", "explanation": "Mécanismes variés.", "tag": "Sémio"},
+        {"q": "Triade Autisme ?", "type": "ouverte", "answer": "Déficit Com/Social + Comportements restreints/répétitifs.", "explanation": "Dyade dans le DSM-5.", "tag": "TSA"},
+        {"q": "Anhédonie ?", "options": ["Perte plaisir", "Perte mémoire"], "answer": "Perte plaisir", "type": "qcm", "explanation": "Signe dépression.", "tag": "Sémio"},
+        {"q": "Symptômes négatifs Schizo ?", "type": "ouverte", "answer": "Apragmatisme, Aboulie, Retrait social, Émoussement.", "explanation": "Opposés aux positifs (délires).", "tag": "Schizo"},
+        {"q": "Dysharmonie évolutive ?", "type": "ouverte", "answer": "Pathologie limite enfant, développement hétérogène.", "explanation": "Concept CFTMEA.", "tag": "Pédopsy"},
     ],
 
-
-
     "MODULE 6: Psychomotricité Théorique": [
-
-        # DÉFINITIONS & CONCEPTS
-
-        {"q": "Définition de la Psychomotricité (Globale).", "type": "ouverte", "answer": "Discipline qui considère l'homme dans sa globalité, liant fonctions motrices, cognitives et affectives. Agir sur le corps pour agir sur le psychisme.", "explanation": "Lien soma-psyché.", "tag": "Déf"},
-
-        {"q": "Dialogue Tonique (Wallon/Ajuriaguerra) ?", "type": "ouverte", "answer": "Mode fondamental de communication et d'échange émotionnel mère-enfant passant par les variations du tonus musculaire.", "explanation": "Le tonus est la toile de fond de l'émotion.", "tag": "Concept"},
-
-        {"q": "Différence Schéma Corporel / Image du Corps (Dolto) ?", "type": "ouverte", "answer": "Schéma = Réalité physiologique, universel, conscient, évolutif. Image = Inconsciente, propre à l'histoire affective du sujet, relationnelle.", "explanation": "On peut avoir un schéma corporel intact mais une image du corps blessée.", "tag": "Concept"},
-
-        {"q": "Loi Céphalo-caudale ?", "options": ["Contrôle du centre vers les extrémités", "Contrôle de la tête vers les pieds"], "answer": "Contrôle de la tête vers les pieds", "type": "qcm", "explanation": "Tenu de tête -> Assis -> Debout.", "tag": "Dvlpmt"},
-
-        {"q": "Loi Proximo-distale ?", "options": ["Contrôle du centre vers les extrémités", "Contrôle de la tête vers les pieds"], "answer": "Contrôle du centre vers les extrémités", "type": "qcm", "explanation": "Épaules -> Mains -> Doigts.", "tag": "Dvlpmt"},
-
+        # CONCEPTS
+        {"q": "Définition Psychomot ?", "type": "ouverte", "answer": "Lien corps-psyché. Agir sur le corps pour agir sur le psychisme.", "explanation": "Approche globale.", "tag": "Déf"},
+        {"q": "Dialogue Tonique ?", "type": "ouverte", "answer": "Communication émotionnelle mère-enfant via variations tonus.", "explanation": "Wallon/Ajuriaguerra.", "tag": "Concept"},
+        {"q": "Schéma vs Image Corps ?", "type": "ouverte", "answer": "Schéma = Physio/Universel. Image = Inconscient/Affectif.", "explanation": "Dolto.", "tag": "Concept"},
+        {"q": "Loi Proximo-distale ?", "options": ["Tête aux pieds", "Centre aux extrémités"], "answer": "Centre aux extrémités", "type": "qcm", "explanation": "Contrôle épaule avant main.", "tag": "Dvlpmt"},
+        {"q": "Loi Céphalo-caudale ?", "options": ["Tête aux pieds", "Centre aux extrémités"], "answer": "Tête aux pieds", "type": "qcm", "explanation": "Tenu tête avant debout.", "tag": "Dvlpmt"},
+        {"q": "Sensori-motricité ?", "type": "ouverte", "answer": "Lien indissociable sensation/mouvement. Boucle.", "explanation": "Bullinger.", "tag": "Concept"},
         
-
-        # HISTOIRE & CADRE PRO
-
-        {"q": "Qui a créé la première chaire de psychomotricité en 1947 ?", "options": ["Giselle Soubiran", "Julian de Ajuriaguerra", "Henri Wallon"], "answer": "Julian de Ajuriaguerra", "type": "qcm", "explanation": "À l'hôpital Henri Rousselle (Sainte-Anne). Avec Soubiran pour la pratique.", "tag": "Histoire"},
-
-        {"q": "Date du Diplôme d'État (DE) ?", "options": ["1960", "1974", "1988"], "answer": "1974", "type": "qcm", "explanation": "15 Février 1974.", "tag": "Cadre"},
-
-        {"q": "Date du Décret de Compétence (Actes) ?", "options": ["1974", "1988", "2004"], "answer": "1988", "type": "qcm", "explanation": "Définit ce qu'on a le droit de faire (bilan, rééducation...).", "tag": "Cadre"},
-
-        {"q": "Le bilan psychomoteur est-il obligatoire ?", "options": ["Oui, avant toute prise en charge", "Non, facultatif"], "answer": "Oui, avant toute prise en charge", "type": "qcm", "explanation": "Prescrit par le médecin, il permet le diagnostic psychomoteur et le projet thérapeutique.", "tag": "Pratique"},
-
-        
-
-        # CLINIQUE
-
-        {"q": "Qu'est-ce qu'une médiation thérapeutique ?", "type": "ouverte", "answer": "Utilisation d'un tiers (objet, matière, activité) pour faciliter la relation, l'expression et contourner les défenses.", "explanation": "Médium malléable (Roussillon). Ex: Eau, Argile, Cheval.", "tag": "Pratique"},
-
-        {"q": "Qu'est-ce que la paratonie ?", "options": ["Absence de tonus", "Freinage tonique involontaire lors de la mobilisation passive", "Tremblement"], "answer": "Freinage tonique involontaire lors de la mobilisation passive", "type": "qcm", "explanation": "Signe d'une difficulté de relâchement liée à l'anxiété ou au vieillissement.", "tag": "Sémio"},
-
-        {"q": "Réflexes archaïques : Citez-en 3.", "type": "ouverte", "answer": "Agrippement (Grasping), Moro, Marche automatique, Succion, RTAC (Escrimeur).", "explanation": "Témoignent de la maturation du système sous-cortical. Doivent s'intégrer.", "tag": "Dvlpmt"},
-
-        {"q": "Qu'est-ce que la sensori-motricité ?", "type": "ouverte", "answer": "Lien indissociable entre la sensation (afférence) et le mouvement (efférence). Le mouvement crée la sensation et la sensation guide le mouvement.", "explanation": "Boucle sensori-motrice (Bullinger, Piaget).", "tag": "Concept"},
-
+        # CADRE & PRATIQUE
+        {"q": "Créateur Chaire Psychomot 1947 ?", "answer": "Ajuriaguerra", "type": "qcm", "options": ["Freud", "Ajuriaguerra"], "explanation": "Avec Soubiran.", "tag": "Histoire"},
+        {"q": "Date DE ?", "options": ["1974", "1988"], "answer": "1974", "type": "qcm", "explanation": "Décret compétences 1988.", "tag": "Cadre"},
+        {"q": "Paratonie ?", "options": ["Freinage tonique involontaire", "Paralysie"], "answer": "Freinage tonique involontaire", "type": "qcm", "explanation": "Impossibilité de relâchement passif.", "tag": "Sémio"},
+        {"q": "Médiation thérapeutique ?", "type": "ouverte", "answer": "Utilisation d'un tiers (objet/activité) pour faciliter relation et expression.", "explanation": "Contourner les défenses.", "tag": "Pratique"},
     ]
-
 }
 
-
-
-# --- LOGIQUE DE L'APPLICATION ---
-
-st.sidebar.image("https://img.icons8.com/color/96/000000/brain--v1.png", width=80)
-
-st.sidebar.title("🩺 Psychomot' Master")
-
-st.sidebar.markdown("**Mode Révision Partiel**")
-
-st.sidebar.info("Coche les modules que tu veux bosser aujourd'hui.")
-
-
-
-# Sélection du module
-
-module_choisi = st.sidebar.selectbox("📚 Choisir un module :", list(db_questions.keys()))
-
-
-
-# Initialisation des variables de session pour stocker les résultats
-
-if 'answers' not in st.session_state:
-
-    st.session_state.answers = {}
-
+# --- GESTION DE L'ÉTAT (SESSION STATE) ---
+if 'history' not in st.session_state:
+    st.session_state.history = [] 
+if 'current_score' not in st.session_state:
+    st.session_state.current_score = 0
+if 'current_mistakes' not in st.session_state:
+    st.session_state.current_mistakes = [] 
+if 'validated_questions' not in st.session_state:
+    st.session_state.validated_questions = set() 
 if 'show_explanation' not in st.session_state:
-
     st.session_state.show_explanation = {}
 
+# --- NAVIGATION ---
+menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"])
 
+# --- FONCTIONS UTILES ---
+def get_global_stats():
+    if not st.session_state.history:
+        return None
+    df = pd.DataFrame(st.session_state.history)
+    avg_per_module = df.groupby("module")["score_percent"].mean().reset_index()
+    return avg_per_module
 
-st.title(f"🎓 {module_choisi}")
+def get_weaknesses():
+    all_mistakes = []
+    for session in st.session_state.history:
+        all_mistakes.extend(session['mistakes'])
+    if not all_mistakes:
+        return []
+    from collections import Counter
+    counts = Counter(all_mistakes)
+    return counts.most_common(5)
 
-st.write("Réponds aux questions pour vérifier tes connaissances. Prends ton temps, c'est comme au partiel !")
-
-st.write("---")
-
-
-
-questions = db_questions[module_choisi]
-
-score_module = 0
-
-
-
-for i, q in enumerate(questions):
-
-    st.markdown(f"<div class='question-card'><h3>Question {i+1} <span class='tag-badge'>{q['tag']}</span></h3>", unsafe_allow_html=True)
-
-    st.write(f"**{q['q']}**")
-
+# =========================================================
+# PAGE 1 : TABLEAU DE BORD
+# =========================================================
+if menu == "Tableau de Bord":
+    st.title("📊 Tableau de Bord de Révision")
+    stats = get_global_stats()
     
-
-    # --- GESTION DES QCM ---
-
-    if q["type"] == "qcm":
-
-        key_radio = f"radio_{module_choisi}_{i}"
-
-        user_choice = st.radio("Ta réponse :", q["options"], key=key_radio, index=None)
-
+    if stats is None:
+        st.info("👋 Aucune donnée. Va dans 'Passer un Quiz' pour commencer.")
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Quiz terminés", len(st.session_state.history))
+        with col2:
+            st.metric("Moyenne Générale", f"{stats['score_percent'].mean():.1f}%")
         
-
-        if st.button(f"Valider Q{i+1}", key=f"btn_{module_choisi}_{i}"):
-
-            st.session_state.show_explanation[f"{module_choisi}_{i}"] = True
-
+        st.write("---")
+        st.subheader("📈 Progression par Module")
+        fig = px.bar(stats, x='module', y='score_percent', range_y=[0, 100], 
+                     color='score_percent', color_continuous_scale='Bluered')
+        st.plotly_chart(fig, use_container_width=True)
         
+        st.subheader("⚠️ Top 5 des thèmes à revoir")
+        weaknesses = get_weaknesses()
+        if weaknesses:
+            cols = st.columns(5)
+            for i, (tag, count) in enumerate(weaknesses):
+                with cols[i % 5]:
+                    st.markdown(f"<div class='metric-card' style='border-left: 5px solid #ff4d4d;'><b>{tag}</b><br>{count} erreurs</div>", unsafe_allow_html=True)
+        else:
+            st.success("Aucune lacune récurrente !")
 
-        if st.session_state.show_explanation.get(f"{module_choisi}_{i}"):
-
-            if user_choice == q["answer"]:
-
-                st.success("✅ Bonne réponse !")
-
-            else:
-
-                st.error(f"❌ Faux. La réponse était : {q['answer']}")
-
+# =========================================================
+# PAGE 2 : QUIZ
+# =========================================================
+elif menu == "Passer un Quiz":
+    module_choisi = st.sidebar.selectbox("Choisir le module :", list(db_questions.keys()))
+    
+    # Reset si changement de module
+    if 'active_module' not in st.session_state or st.session_state.active_module != module_choisi:
+        st.session_state.active_module = module_choisi
+        st.session_state.current_score = 0
+        st.session_state.current_mistakes = []
+        st.session_state.validated_questions = set()
+        st.session_state.show_explanation = {}
+    
+    st.title(f"📝 {module_choisi}")
+    questions = db_questions[module_choisi]
+    
+    for i, q in enumerate(questions):
+        st.markdown(f"<div class='question-card'><h5>Question {i+1} <span style='background:#eee;padding:2px 5px;border-radius:5px;font-size:0.7em'>{q['tag']}</span></h5>", unsafe_allow_html=True)
+        st.write(f"**{q['q']}**")
+        q_id = f"{module_choisi}_{i}"
+        
+        if q["type"] == "qcm":
+            user_choice = st.radio("Réponse :", q["options"], key=f"radio_{q_id}", index=None)
+            if st.button(f"Valider Q{i+1}", key=f"btn_{q_id}"):
+                st.session_state.show_explanation[q_id] = True
+                if q_id not in st.session_state.validated_questions:
+                    st.session_state.validated_questions.add(q_id)
+                    if user_choice == q["answer"]:
+                        st.session_state.current_score += 1
+                    else:
+                        st.session_state.current_mistakes.append(q["tag"])
             
+            if st.session_state.show_explanation.get(q_id):
+                if user_choice == q["answer"]:
+                    st.success("Correct !")
+                else:
+                    st.error(f"Faux. Réponse : {q['answer']}")
+                st.info(f"💡 {q['explanation']}")
 
-            st.markdown(f"<div class='correction-box'>💡 <b>Explication :</b> {q['explanation']}</div>", unsafe_allow_html=True)
+        elif q["type"] == "ouverte":
+            st.text_area("Ta réflexion :", key=f"txt_{q_id}")
+            if st.button(f"Vérifier Q{i+1}", key=f"btn_{q_id}"):
+                st.session_state.show_explanation[q_id] = True
+                if q_id not in st.session_state.validated_questions:
+                    st.session_state.validated_questions.add(q_id)
+            
+            if st.session_state.show_explanation.get(q_id):
+                st.markdown(f"<div class='feedback-box'>✅ <b>Réponse attendue :</b> {q['answer']}<br><i>(Auto-évaluation)</i></div>", unsafe_allow_html=True)
+                col_a, col_b = st.columns(2)
+                if f"eval_{q_id}" not in st.session_state:
+                    if col_a.button("J'ai eu bon ✅", key=f"good_{q_id}"):
+                        st.session_state.current_score += 1
+                        st.session_state[f"eval_{q_id}"] = True
+                        st.rerun()
+                    if col_b.button("J'ai eu faux ❌", key=f"bad_{q_id}"):
+                        st.session_state.current_mistakes.append(q["tag"])
+                        st.session_state[f"eval_{q_id}"] = True
+                        st.rerun()
+        st.markdown("---")
 
-
-
-    # --- GESTION DES QUESTIONS OUVERTES ---
-
-    elif q["type"] == "ouverte":
-
-        st.text_area("Écris ta réponse ici (pour toi) :", key=f"text_{module_choisi}_{i}", height=100)
-
-        
-
-        if st.button(f"Voir la correction Q{i+1}", key=f"btn_open_{module_choisi}_{i}"):
-
-             st.session_state.show_explanation[f"{module_choisi}_{i}"] = True
-
-        
-
-        if st.session_state.show_explanation.get(f"{module_choisi}_{i}"):
-
-            st.info("Compare ta réponse avec le corrigé type ci-dessous :")
-
-            st.markdown(f"<div class='correction-box'>✅ <b>Réponse attendue :</b> {q['answer']}<br><br>💡 <b>Détail :</b> {q['explanation']}</div>", unsafe_allow_html=True)
-
-            st.write("*(Si tu as les mots-clés, compte-toi le point !)*")
-
-
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-
-# --- BOUTON RESET ---
-
-if st.sidebar.button("🗑️ Effacer mes réponses et recommencer"):
-
-    st.session_state.show_explanation = {}
-
-    st.session_state.answers = {}
-
-    st.rerun()
-
-
-
-st.sidebar.write("---")
-
-st.sidebar.caption("Généré par ton Assistant IA 🤖 - Basé sur tes cours officiels.")
+    if st.button("🏁 TERMINER CE MODULE", type="primary"):
+        total_q = len(questions)
+        score = st.session_state.current_score
+        percent = (score / total_q) * 100
+        st.session_state.history.append({
+            "module": module_choisi, "score": score, "total": total_q,
+            "score_percent": percent, "mistakes": st.session_state.current_mistakes
+        })
+        st.balloons()
+        st.success(f"Score : {score}/{total_q} ({percent:.0f}%)")
+        if st.session_state.current_mistakes:
+            st.write("### 🔍 À revoir :")
+            from collections import Counter
+            for tag, count in Counter(st.session_state.current_mistakes).items():
+                st.markdown(f"- **{tag}** ({count} fautes)")
+        st.info("Résultats enregistrés dans le Tableau de Bord.")
