@@ -438,7 +438,8 @@ if 'show_explanation' not in st.session_state:
 if 'quiz_batch' not in st.session_state:
     st.session_state.quiz_batch = []
 
-QUESTIONS_PAR_QUIZ = 15
+# --- CONSTANTE MODIFIÉE ---
+QUESTIONS_PAR_QUIZ = 20  # <--- C'est ici que ça se passe !
 
 # --- BARRE LATÉRALE : SAUVEGARDE & CHARGEMENT ---
 st.sidebar.image("https://img.icons8.com/color/96/000000/brain--v1.png", width=60)
@@ -480,7 +481,6 @@ def get_global_stats():
     if not st.session_state.history:
         return None
     df = pd.DataFrame(st.session_state.history)
-    # On ajoute la colonne note sur 20
     df['note_20'] = df['score_percent'] / 5
     avg_per_module = df.groupby("module")["note_20"].mean().reset_index()
     return avg_per_module
@@ -491,12 +491,12 @@ def get_best_worst():
     df = pd.DataFrame(st.session_state.history)
     df['note_20'] = df['score_percent'] / 5
     
-    # Meilleur score (Max)
+    # Meilleur score
     idx_max = df['note_20'].idxmax()
     best = df.loc[idx_max]
     best_txt = f"{best['note_20']:.1f}/20 ({best['module']})"
     
-    # Pire score (Min)
+    # Pire score
     idx_min = df['note_20'].idxmin()
     worst = df.loc[idx_min]
     worst_txt = f"{worst['note_20']:.1f}/20 ({worst['module']})"
@@ -551,7 +551,7 @@ if menu == "Tableau de Bord":
         
         col_graph1, col_graph2 = st.columns(2)
         
-        # 2. Graphique Bâtons (Moyenne par Module SUR 20)
+        # 2. Graphique Bâtons (/20)
         with col_graph1:
             st.subheader("📈 Moyenne par matière (/20)")
             fig_bar = px.bar(stats, x='module', y='note_20', range_y=[0, 20], 
@@ -559,7 +559,7 @@ if menu == "Tableau de Bord":
                          color='note_20', color_continuous_scale='Bluered')
             st.plotly_chart(fig_bar, use_container_width=True)
 
-        # 3. Graphique Évolution (SUR 20 et AXE X ENTIER)
+        # 3. Graphique Évolution (Axe X entier de 1 en 1)
         with col_graph2:
             st.subheader("🚀 Évolution des notes")
             df_hist = pd.DataFrame(st.session_state.history)
@@ -567,13 +567,11 @@ if menu == "Tableau de Bord":
             df_hist['Essai'] = range(1, len(df_hist) + 1)
             
             fig_line = px.line(df_hist, x='Essai', y='note_20', color='module', markers=True,
-                               range_y=[0, 21], # Un peu plus que 20 pour ne pas couper le point
+                               range_y=[0, 21],
                                labels={'Essai': 'Numéro du Quiz', 'note_20': 'Note / 20'},
                                title="Progression au fil des essais")
             
-            # Force l'axe X à n'afficher que des entiers (1, 2, 3...)
             fig_line.update_xaxes(dtick=1)
-            
             st.plotly_chart(fig_line, use_container_width=True)
         
         st.write("---")
@@ -594,7 +592,8 @@ elif menu == "Passer un Quiz":
     st.sidebar.header("🎯 Nouveau Tirage")
     module_choisi = st.sidebar.selectbox("Choisir le module :", list(db_questions.keys()))
     
-    if st.sidebar.button("🎲 GÉNÉRER UN NOUVEAU QUIZ (15 Q)", type="primary"):
+    # Mise à jour du bouton avec "20 Q"
+    if st.sidebar.button("🎲 GÉNÉRER UN NOUVEAU QUIZ (20 Q)", type="primary"):
         generer_nouveau_quiz(module_choisi)
         st.rerun()
 
