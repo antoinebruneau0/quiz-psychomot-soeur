@@ -124,7 +124,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "L'âge (nourrisson/personne âgée), la grossesse, l'alimentation (à jeun ou non), et certaines pathologies (insuffisance hépatique).",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "Par exemple, chez la personne âgée, le métabolisme hépatique ralentit, ce qui augmente la biodisponibilité et le risque de surdosage[cite: 66].",
+        "explanation": "Par exemple, chez la personne âgée, le métabolisme hépatique ralentit, ce qui augmente la biodisponibilité et le risque de surdosage[cite: 66].",
         "tag": "Variabilité"
     },
 
@@ -206,7 +206,7 @@ db_questions = {
         "answer": "C'est un puissant inhibiteur enzymatique intestinal (CYP3A4) qui augmente l'absorption de certains médicaments",
         "type": "qcm",
         "level": "Avancé",
-        [cite_start]"explanation": "En bloquant les enzymes de la paroi intestinale, le jus de pamplemousse laisse passer beaucoup plus de médicament dans le sang que prévu (effet de premier passage réduit), créant un surdosage parfois mortel (ex: avec certains immunosuppresseurs)[cite: 100].",
+        "explanation": "En bloquant les enzymes de la paroi intestinale, le jus de pamplemousse laisse passer beaucoup plus de médicament dans le sang que prévu (effet de premier passage réduit), créant un surdosage parfois mortel (ex: avec certains immunosuppresseurs)[cite: 100].",
         "tag": "Interaction"
     },
     {
@@ -473,7 +473,7 @@ db_questions = {
         "answer": "Le symptôme est subjectif (décrit par le patient), le signe est objectif (constaté par le soignant)",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "La douleur est un symptôme (ressenti). Une rougeur ou une tachycardie mesurée sont des signes (observables). L'ensemble permet de poser un diagnostic[cite: 904, 908].",
+        "explanation": "La douleur est un symptôme (ressenti). Une rougeur ou une tachycardie mesurée sont des signes (observables). L'ensemble permet de poser un diagnostic[cite: 904, 908].",
         "tag": "Sémiologie"
     },
     {
@@ -487,7 +487,7 @@ db_questions = {
         "answer": "L'école laïque, gratuite et obligatoire",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "C'est le fondement de l'école républicaine moderne en France, rendant l'instruction primaire obligatoire pour tous les enfants[cite: 1380].",
+        "explanation": "C'est le fondement de l'école républicaine moderne en France, rendant l'instruction primaire obligatoire pour tous les enfants[cite: 1380].",
         "tag": "Histoire Éducation"
     },
     {
@@ -504,7 +504,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "L'enfant est acteur de son développement ('Aide-moi à faire seul'). L'éducateur observe et fournit un environnement stimulant mais n'intervient pas directement pour diriger.",
         "level": "Basique",
-        [cite_start]"explanation": "Maria Montessori, première femme médecin en Italie, a basé sa méthode sur l'autonomie et le respect du rythme individuel de l'enfant [cite: 1366-1368].",
+        "explanation": "Maria Montessori, première femme médecin en Italie, a basé sa méthode sur l'autonomie et le respect du rythme individuel de l'enfant [cite: 1366-1368].",
         "tag": "Pédagogie"
     },
     {
@@ -523,7 +523,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "L'Enseignant, L'Apprenant, et Le Savoir.",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "Ce triangle définit les relations : Enseigner (Enseignant-Savoir), Former (Enseignant-Apprenant) et Apprendre (Apprenant-Savoir) [cite: 1347-1353].",
+        "explanation": "Ce triangle définit les relations : Enseigner (Enseignant-Savoir), Former (Enseignant-Apprenant) et Apprendre (Apprenant-Savoir) [cite: 1347-1353].",
         "tag": "Pédagogie"
     },
     {
@@ -553,7 +553,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Asthénie (fatigue), Anorexie (perte d'appétit), Amaigrissement (perte de poids).",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "La présence de ces trois signes simultanément est un signal d'alarme important pouvant indiquer une pathologie grave (cancer, tuberculose, dépression sévère) [cite: 990-993].",
+        "explanation": "La présence de ces trois signes simultanément est un signal d'alarme important pouvant indiquer une pathologie grave (cancer, tuberculose, dépression sévère) [cite: 990-993].",
         "tag": "Sémiologie"
     },
     {
@@ -567,7 +567,7 @@ db_questions = {
         "answer": "Prévenir les maladies, prolonger la vie et promouvoir la santé physique à travers des efforts communautaires",
         "type": "qcm",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "C'est une définition fondatrice qui intègre l'assainissement, le contrôle des infections et l'éducation à l'hygiène[cite: 863].",
+        "explanation": "C'est une définition fondatrice qui intègre l'assainissement, le contrôle des infections et l'éducation à l'hygiène[cite: 863].",
         "tag": "Santé Publique"
     },
 
@@ -577,7 +577,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "La prophylaxie désigne spécifiquement l'ensemble des méthodes pour protéger un individu/groupe contre l'apparition et la transmission d'une maladie (barrière active). La prévention est un terme plus large incluant l'éducation et la promotion de la santé.",
         "level": "Avancé",
-        [cite_start]"explanation": "Le cours précise bien que ces termes ne sont pas interchangeables malgré l'usage courant [cite: 892-893]. La prophylaxie a souvent une connotation plus 'médicale/technique' (ex: prophylaxie du paludisme).",
+        "explanation": "Le cours précise bien que ces termes ne sont pas interchangeables malgré l'usage courant [cite: 892-893]. La prophylaxie a souvent une connotation plus 'médicale/technique' (ex: prophylaxie du paludisme).",
         "tag": "Santé Publique"
     },
     {
@@ -607,7 +607,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est la méthode consistant à lister les pathologies présentant des symptômes similaires à ceux du patient, pour les éliminer une par une et trouver la bonne.",
         "level": "Avancé",
-        [cite_start]"explanation": "Contrairement au diagnostic positif (ce que c'est), le diagnostic différentiel (ce que ce n'est pas) permet d'éviter les erreurs en envisageant toutes les hypothèses[cite: 878].",
+        "explanation": "Contrairement au diagnostic positif (ce que c'est), le diagnostic différentiel (ce que ce n'est pas) permet d'éviter les erreurs en envisageant toutes les hypothèses[cite: 878].",
         "tag": "Démarche Clinique"
     },
     {
@@ -621,7 +621,7 @@ db_questions = {
         "answer": "Permettre à l'enfant de différer sa réaction (ex: violence) en écrivant, favorisant ainsi la réflexion et la régulation émotionnelle",
         "type": "qcm",
         "level": "Avancé",
-        [cite_start]"explanation": "Korczak utilisait l'écriture et le délai (24h avant une confrontation) pour pacifier les relations et responsabiliser les enfants [cite: 1375-1376].",
+        "explanation": "Korczak utilisait l'écriture et le délai (24h avant une confrontation) pour pacifier les relations et responsabiliser les enfants [cite: 1375-1376].",
         "tag": "Pédagogie"
     },
     {
@@ -629,7 +629,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est une défaillance pulmonaire grave (œdème lésionnel). Signes : Dyspnée brutale, Polypnée superficielle, Cyanose (hypoxie), Tirage intercostal et Râles crépitants.",
         "level": "Avancé",
-        [cite_start]"explanation": "C'est l'exemple type d'un 'Syndrome' : un ensemble de signes cliniques et biologiques décrivant un état pathologique critique [cite: 1173, 1177-1180].",
+        "explanation": "C'est l'exemple type d'un 'Syndrome' : un ensemble de signes cliniques et biologiques décrivant un état pathologique critique [cite: 1173, 1177-1180].",
         "tag": "Sémiologie"
     },
     {
@@ -643,7 +643,7 @@ db_questions = {
         "answer": "La toux productive ramène des expectorations (mucus/pus), la toux sèche est irritative sans rejet",
         "type": "qcm",
         "level": "Avancé",
-        [cite_start]"explanation": "Cette distinction oriente le diagnostic (bronchite bactérienne vs asthme/virus) et le traitement (ne pas bloquer une toux productive qui évacue les germes !) [cite: 1119-1120].",
+        "explanation": "Cette distinction oriente le diagnostic (bronchite bactérienne vs asthme/virus) et le traitement (ne pas bloquer une toux productive qui évacue les germes !) [cite: 1119-1120].",
         "tag": "Sémiologie"
     },
     {
@@ -651,7 +651,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est le processus de transformation du 'Savoir Savant' (universitaire, complexe) en 'Savoir Enseigné' (accessible, adapté au niveau des élèves).",
         "level": "Avancé",
-        [cite_start]"explanation": "C'est le cœur du métier d'enseignant ou de formateur : rendre digeste une information complexe sans la dénaturer[cite: 1342].",
+        "explanation": "C'est le cœur du métier d'enseignant ou de formateur : rendre digeste une information complexe sans la dénaturer[cite: 1342].",
         "tag": "Pédagogie"
     },
     {
@@ -665,7 +665,7 @@ db_questions = {
         "answer": "On travaille par 'périodes' d'une même matière pendant 3 à 4 semaines, avec le même professeur sur plusieurs années",
         "type": "qcm",
         "level": "Avancé",
-        [cite_start]"explanation": "Steiner vise une approche holistique (corps/esprit), rythmant l'apprentissage sur des cycles longs pour une imprégnation profonde, souvent avec un lien fort à l'artistique[cite: 1358, 1364].",
+        "explanation": "Steiner vise une approche holistique (corps/esprit), rythmant l'apprentissage sur des cycles longs pour une imprégnation profonde, souvent avec un lien fort à l'artistique[cite: 1358, 1364].",
         "tag": "Pédagogie"
     },
     {
@@ -7111,4 +7111,5 @@ elif menu == "Passer un Quiz":
             
 
             st.info("Résultat enregistré ! Pense à sauvegarder ta progression dans le menu de gauche.")
+
 
