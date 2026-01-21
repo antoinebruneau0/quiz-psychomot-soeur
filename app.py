@@ -35,7 +35,7 @@ db_questions = {
         "answer": "La proportion de principe actif qui atteint la circulation générale inchangée et la vitesse à laquelle cela se produit",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "C'est une notion clé[cite: 38]. Pour la voie intraveineuse (IV), la biodisponibilité est par définition de 100% car il n'y a pas de barrière à franchir. Pour la voie orale, elle est souvent inférieure à cause de l'effet de premier passage hépatique.",
+        "explanation": "C'est une notion clé[cite: 38]. Pour la voie intraveineuse (IV), la biodisponibilité est par définition de 100% car il n'y a pas de barrière à franchir. Pour la voie orale, elle est souvent inférieure à cause de l'effet de premier passage hépatique.",
         "tag": "Pharmacocinétique"
     },
     {
@@ -43,7 +43,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est une copie d'un médicament original (princeps) dont le brevet est tombé dans le domaine public. Il a la même composition qualitative et quantitative en principe actif et la même forme pharmaceutique.",
         "level": "Basique",
-        [cite_start]"explanation": "Le générique doit prouver sa bioéquivalence[cite: 34]. Attention, les excipients peuvent être différents, ce qui peut changer le goût ou la couleur, mais pas l'efficacité thérapeutique.",
+        "explanation": "Le générique doit prouver sa bioéquivalence[cite: 34]. Attention, les excipients peuvent être différents, ce qui peut changer le goût ou la couleur, mais pas l'efficacité thérapeutique.",
         "tag": "Définition"
     },
     {
@@ -52,7 +52,7 @@ db_questions = {
         "answer": "La voie intraveineuse",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "La voie IV injecte le produit directement dans le sang[cite: 41]. La voie sublinguale évite aussi le foie (passage direct dans la veine cave supérieure). La voie orale oblige le médicament à passer par le foie (via la veine porte) avant d'atteindre le cœur.",
+        "explanation": "La voie IV injecte le produit directement dans le sang[cite: 41]. La voie sublinguale évite aussi le foie (passage direct dans la veine cave supérieure). La voie orale oblige le médicament à passer par le foie (via la veine porte) avant d'atteindre le cœur.",
         "tag": "Pharmacocinétique"
     },
     {
@@ -61,7 +61,7 @@ db_questions = {
         "answer": "Donner une forme, un goût et assurer la stabilité sans avoir d'activité thérapeutique",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "L'excipient sert à la fabrication, à la conservation et à l'acceptabilité (goût, couleur)[cite: 15]. Certains excipients dits 'à effet notoire' (sucre, lactose) peuvent toutefois être mal tolérés par certains patients.",
+        "explanation": "L'excipient sert à la fabrication, à la conservation et à l'acceptabilité (goût, couleur)[cite: 15]. Certains excipients dits 'à effet notoire' (sucre, lactose) peuvent toutefois être mal tolérés par certains patients.",
         "tag": "Galénique"
     },
     {
@@ -70,7 +70,7 @@ db_questions = {
         "answer": "Absorption, Distribution, Métabolisme, Élimination",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "Ce sont les 4 étapes du devenir du médicament dans l'organisme[cite: 50]. L'organisme agit sur le médicament (Pharmacocinétique), contrairement à la Pharmacodynamie où c'est le médicament qui agit sur l'organisme.",
+       "explanation": "Ce sont les 4 étapes du devenir du médicament dans l'organisme[cite: 50]. L'organisme agit sur le médicament (Pharmacocinétique), contrairement à la Pharmacodynamie où c'est le médicament qui agit sur l'organisme.",
         "tag": "Pharmacocinétique"
     },
 
@@ -80,7 +80,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Car seule la fraction libre (non liée) du médicament est active, peut diffuser dans les tissus et être éliminée. La fraction liée sert de réserve.",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "Si deux médicaments entrent en compétition pour se lier à la même protéine, l'un peut chasser l'autre, augmentant brutalement sa fraction libre et donc le risque de surdosage toxique[cite: 81].",
+        "explanation": "Si deux médicaments entrent en compétition pour se lier à la même protéine, l'un peut chasser l'autre, augmentant brutalement sa fraction libre et donc le risque de surdosage toxique[cite: 81].",
         "tag": "Distribution"
     },
     {
@@ -7111,3 +7111,4 @@ elif menu == "Passer un Quiz":
             
 
             st.info("Résultat enregistré ! Pense à sauvegarder ta progression dans le menu de gauche.")
+
