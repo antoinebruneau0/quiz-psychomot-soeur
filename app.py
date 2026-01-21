@@ -94,7 +94,7 @@ db_questions = {
         "answer": "La perte de principe actif métabolisé par le foie avant d'atteindre la circulation générale lors d'une prise orale",
         "type": "qcm",
         "level": "Intermédiaire",
-        "explanation": "Après absorption intestinale, le sang passe par la veine porte vers le foie. [cite_start]Le foie, véritable usine chimique, peut détruire une grande partie du médicament avant qu'il n'ait pu agir ailleurs[cite: 68].",
+        "explanation": "Après absorption intestinale, le sang passe par la veine porte vers le foie. Le foie, véritable usine chimique, peut détruire une grande partie du médicament avant qu'il n'ait pu agir ailleurs[cite: 68].",
         "tag": "Pharmacocinétique"
     },
     {
@@ -102,7 +102,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "La Pharmacocinétique étudie l'effet de l'organisme sur le médicament (ADME). La Pharmacodynamie étudie l'effet du médicament sur l'organisme (mécanisme d'action, récepteurs).",
         "level": "Intermédiaire",
-        "explanation": "Pour retenir : Cinétique = Mouvement du médicament dans le corps. [cite_start]Dynamique = Force/Action du médicament sur la maladie[cite: 46, 47].",
+        "explanation": "Pour retenir : Cinétique = Mouvement du médicament dans le corps. Dynamique = Force/Action du médicament sur la maladie[cite: 46, 47].",
         "tag": "Définition"
     },
     {
@@ -116,7 +116,7 @@ db_questions = {
         "answer": "Un médicament stimule l'activité des enzymes hépatiques, accélérant ainsi la dégradation d'autres médicaments",
         "type": "qcm",
         "level": "Intermédiaire",
-        "explanation": "Un 'inducteur' enzymatique (ex: alcool chronique, millepertuis) va rendre le foie plus performant pour détruire les médicaments. [cite_start]Résultat : les autres traitements deviennent MOINS efficaces car éliminés trop vite[cite: 100].",
+        "explanation": "Un 'inducteur' enzymatique (ex: alcool chronique, millepertuis) va rendre le foie plus performant pour détruire les médicaments. Résultat : les autres traitements deviennent MOINS efficaces car éliminés trop vite[cite: 100].",
         "tag": "Métabolisme"
     },
     {
@@ -134,7 +134,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est un volume fictif théorique représentant la capacité d'un médicament à diffuser dans les tissus. Un Vd élevé signifie que le médicament diffuse beaucoup dans les tissus (et peu dans le sang).",
         "level": "Avancé",
-        "explanation": "Si le Vd est grand, le médicament est 'caché' dans les graisses ou les organes. Il sera difficile à éliminer par dialyse en cas d'intoxication. [cite_start]Si le Vd est petit, le médicament reste concentré dans le sang[cite: 77].",
+        "explanation": "Si le Vd est grand, le médicament est 'caché' dans les graisses ou les organes. Il sera difficile à éliminer par dialyse en cas d'intoxication. Si le Vd est petit, le médicament reste concentré dans le sang[cite: 77].",
         "tag": "Pharmacocinétique"
     },
     {
@@ -148,7 +148,7 @@ db_questions = {
         "answer": "C'est une enzyme clé du foie responsable de la biotransformation de nombreux médicaments",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "Le CYP3A4 est l'enzyme la plus sollicitée. [cite_start]Elle est au cœur de nombreuses interactions médicamenteuses : si elle est inhibée (ex: par le jus de pamplemousse), les médicaments qu'elle dégrade vont s'accumuler et devenir toxiques[cite: 103].",
+        "explanation": "Le CYP3A4 est l'enzyme la plus sollicitée. Elle est au cœur de nombreuses interactions médicamenteuses : si elle est inhibée (ex: par le jus de pamplemousse), les médicaments qu'elle dégrade vont s'accumuler et devenir toxiques[cite: 103].",
         "tag": "Métabolisme"
     },
     {
@@ -162,7 +162,7 @@ db_questions = {
         "answer": "Augmentation de la concentration d'AVK -> Risque hémorragique majeur",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "L'inhibiteur empêche le foie de dégrader l'AVK. L'AVK s'accumule donc dans le sang (surdosage), fluidifiant le sang à l'excès. [cite_start]C'est une urgence iatrogène[cite: 101].",
+        "explanation": "L'inhibiteur empêche le foie de dégrader l'AVK. L'AVK s'accumule donc dans le sang (surdosage), fluidifiant le sang à l'excès. C'est une urgence iatrogène[cite: 101].",
         "tag": "Iatrogénie"
     },
     {
@@ -170,7 +170,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "La iatrogénie désigne les conséquences indésirables d'un acte médical ou médicament, même s'il a été correctement prescrit/réalisé (sans erreur). L'erreur médicale implique une faute (négligence, mauvaise dose).",
         "level": "Avancé",
-        "explanation": "Une chute suite à un médicament qui donne des vertiges (effet secondaire connu) est de la iatrogénie. Donner le mauvais médicament est une erreur. [cite_start]La iatrogénie est souvent évitable mais pas toujours fautive[cite: 894].",
+        "explanation": "Une chute suite à un médicament qui donne des vertiges (effet secondaire connu) est de la iatrogénie. Donner le mauvais médicament est une erreur. La iatrogénie est souvent évitable mais pas toujours fautive[cite: 894].",
         "tag": "Législation"
     },
     {
@@ -184,7 +184,7 @@ db_questions = {
         "answer": "Le volume de plasma totalement épuré d'une substance par unité de temps",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "C'est le meilleur indicateur de la fonction rénale (ex: Clairance de la créatinine). [cite_start]Si la clairance baisse (insuffisance rénale), il faut réduire les doses de médicaments pour éviter le surdosage[cite: 95].",
+        "explanation": "C'est le meilleur indicateur de la fonction rénale (ex: Clairance de la créatinine). Si la clairance baisse (insuffisance rénale), il faut réduire les doses de médicaments pour éviter le surdosage[cite: 95].",
         "tag": "Élimination"
     },
     {
@@ -228,7 +228,7 @@ db_questions = {
         "answer": "Leur volume de distribution change (plus de graisse, moins d'eau) et leur élimination rénale/hépatique diminue",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "Les BZD sont lipophiles (aiment le gras). [cite_start]Comme la personne âgée a plus de masse grasse relative, les BZD s'y stockent (Vd augmente) et s'éliminent moins vite (T1/2 augmente), entraînant somnolence et chutes[cite: 233].",
+        "explanation": "Les BZD sont lipophiles (aiment le gras). Comme la personne âgée a plus de masse grasse relative, les BZD s'y stockent (Vd augmente) et s'éliminent moins vite (T1/2 augmente), entraînant somnolence et chutes[cite: 233].",
         "tag": "Gériatrie"
     },
     {
@@ -496,7 +496,7 @@ db_questions = {
         "answer": "L'étude de ce qui arrive 'sur le peuple'",
         "type": "qcm",
         "level": "Basique",
-        "explanation": "Du grec 'Epi' (sur), 'Demos' (peuple) et 'Logos' (étude). [cite_start]Elle étudie la distribution des problèmes de santé dans les populations [cite: 870-872].",
+        "explanation": "Du grec 'Epi' (sur), 'Demos' (peuple) et 'Logos' (étude). Elle étudie la distribution des problèmes de santé dans les populations [cite: 870-872].",
         "tag": "Santé Publique"
     },
     {
@@ -513,7 +513,7 @@ db_questions = {
         "answer": "L'interrogatoire du patient pour retracer l'histoire de sa maladie et ses antécédents",
         "type": "qcm",
         "level": "Basique",
-        "explanation": "C'est la première étape cruciale de la démarche clinique. [cite_start]Elle recueille les informations subjectives (plaintes) et objectives (antécédents)[cite: 916].",
+        "explanation": "C'est la première étape cruciale de la démarche clinique. Elle recueille les informations subjectives (plaintes) et objectives (antécédents)[cite: 916].",
         "tag": "Sémiologie"
     },
 
@@ -531,7 +531,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Conséquences indésirables ou négatives sur l'état de santé provoquées par un acte médical ou un médicament, même en l'absence d'erreur du soignant.",
         "level": "Intermédiaire",
-        "explanation": "Le terme vient de 'iatros' (médecin). [cite_start]Cela inclut les effets secondaires prévisibles mais aussi les complications imprévues d'un traitement justifié[cite: 894].",
+        "explanation": "Le terme vient de 'iatros' (médecin). Cela inclut les effets secondaires prévisibles mais aussi les complications imprévues d'un traitement justifié[cite: 894].",
         "tag": "Santé Publique"
     },
     {
@@ -545,7 +545,7 @@ db_questions = {
         "answer": "La didactique se focalise sur la transmission du Savoir (contenu), la pédagogie se focalise sur la relation et l'Apprenant (méthode)",
         "type": "qcm",
         "level": "Intermédiaire",
-        "explanation": "La didactique s'intéresse à 'comment enseigner ce contenu spécifique' (transposition didactique). [cite_start]La pédagogie s'intéresse à 'comment l'enfant apprend et grandit'[cite: 1339, 1344].",
+        "explanation": "La didactique s'intéresse à 'comment enseigner ce contenu spécifique' (transposition didactique). La pédagogie s'intéresse à 'comment l'enfant apprend et grandit'[cite: 1339, 1344].",
         "tag": "Pédagogie"
     },
     {
@@ -591,7 +591,7 @@ db_questions = {
         "answer": "Les façons dont les hommes, société par société, savent traditionnellement se servir de leur corps (marcher, nager, dormir)",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "Il n'y a pas de façon 'naturelle' de marcher ou de s'asseoir. Tout est acquis par éducation et mimétisme social. [cite_start]C'est le concept d'Habitus corporel [cite: 818-819].",
+        "explanation": "Il n'y a pas de façon 'naturelle' de marcher ou de s'asseoir. Tout est acquis par éducation et mimétisme social. C'est le concept d'Habitus corporel [cite: 818-819].",
         "tag": "Sociologie"
     },
     {
@@ -599,7 +599,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Dans les sociétés traditionnelles, le corps n'est pas une frontière rigoureuse (il est relié au groupe/cosmos). Dans les sociétés individualistes, le corps fonctionne comme une frontière qui distingue et isole l'individu des autres.",
         "level": "Avancé",
-        "explanation": "Cela influence la perception de la maladie et de la douleur. [cite_start]En occident (individualiste), 'mon' corps est ma propriété privée[cite: 801, 810].",
+        "explanation": "Cela influence la perception de la maladie et de la douleur. En occident (individualiste), 'mon' corps est ma propriété privée[cite: 801, 810].",
         "tag": "Sociologie"
     },
     {
@@ -673,7 +673,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Polyurie = Augmentation du VOLUME total des urines (>2L/24h). Pollakiurie = Augmentation de la FRÉQUENCE des mictions, mais avec de petits volumes (volume total normal).",
         "level": "Avancé",
-        "explanation": "La polyurie évoque un diabète. [cite_start]La pollakiurie évoque une cystite (irritation) ou un problème de prostate (obstacle)[cite: 1134, 1150].",
+        "explanation": "La polyurie évoque un diabète. La pollakiurie évoque une cystite (irritation) ou un problème de prostate (obstacle)[cite: 1134, 1150].",
         "tag": "Sémiologie"
     },
     {
@@ -687,7 +687,7 @@ db_questions = {
         "answer": "Un vomissement de sang d'origine digestive",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "C'est le rejet de sang par la bouche au cours d'un effort de vomissement[cite: 1040]. [cite_start]À ne pas confondre avec l'hémoptysie (sang rejeté par la toux, origine respiratoire)[cite: 1121].",
+        "explanation": "C'est le rejet de sang par la bouche au cours d'un effort de vomissement[cite: 1040]. À ne pas confondre avec l'hémoptysie (sang rejeté par la toux, origine respiratoire)[cite: 1121].",
         "tag": "Sémiologie Digestive"
     },
     {
@@ -696,7 +696,7 @@ db_questions = {
         "answer": "L'Échographie",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "Mise au point vers 1955, elle utilise la réflexion des ultrasons[cite: 1230]. C'est l'examen de choix pour la grossesse car totalement inoffensif (pas de rayons X).",
+        "explanation": "Mise au point vers 1955, elle utilise la réflexion des ultrasons[cite: 1230]. C'est l'examen de choix pour la grossesse car totalement inoffensif (pas de rayons X).",
         "tag": "Imagerie"
     },
     {
@@ -705,7 +705,7 @@ db_questions = {
         "answer": "Un saignement de nez",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "C'est le terme médical pour un saignement de nez[cite: 1005]. [cite_start]L'otorragie est le saignement par l'oreille[cite: 1009].",
+        "explanation": "C'est le terme médical pour un saignement de nez[cite: 1005]. L'otorragie est le saignement par l'oreille[cite: 1009].",
         "tag": "Sémiologie ORL"
     },
     {
@@ -719,7 +719,7 @@ db_questions = {
         "answer": "Porter un objet ferromagnétique (pacemaker, éclat métallique dans l'œil, certaines prothèses)",
         "type": "qcm",
         "level": "Basique",
-        "explanation": "L'IRM est un aimant géant. [cite_start]Tout métal ferreux est attiré violemment ou s'échauffe, ce qui peut être mortel (déplacement du pacemaker, brûlure interne)[cite: 1269].",
+        "explanation": "L'IRM est un aimant géant. Tout métal ferreux est attiré violemment ou s'échauffe, ce qui peut être mortel (déplacement du pacemaker, brûlure interne)[cite: 1269].",
         "tag": "Sécurité Imagerie"
     },
     {
@@ -733,7 +733,7 @@ db_questions = {
         "answer": "Une fréquence cardiaque supérieure à 90-100 bpm au repos",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "C'est l'accélération du rythme cardiaque[cite: 1096]. [cite_start]À l'inverse, la bradycardie est un rythme lent (<50 bpm)[cite: 1099].",
+        "explanation": "C'est l'accélération du rythme cardiaque[cite: 1096]. À l'inverse, la bradycardie est un rythme lent (<50 bpm)[cite: 1099].",
         "tag": "Sémiologie Cardio"
     },
 
@@ -743,7 +743,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Le vomissement est un rejet actif avec effort de contraction (muscles abdominaux/diaphragme). La régurgitation est un rejet passif, sans effort, souvent lié à un reflux ou un obstacle œsophagien.",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "La régurgitation est fréquente chez le nourrisson (immaturité du cardia) ou en cas de méga-œsophage chez l'adulte[cite: 1033, 1041].",
+        "explanation": "La régurgitation est fréquente chez le nourrisson (immaturité du cardia) ou en cas de méga-œsophage chez l'adulte[cite: 1033, 1041].",
         "tag": "Sémiologie Digestive"
     },
     {
@@ -757,7 +757,7 @@ db_questions = {
         "answer": "Des selles noires, goudronneuses et nauséabondes, signifiant une hémorragie digestive haute (sang digéré)",
         "type": "qcm",
         "level": "Intermédiaire",
-        "explanation": "La couleur noire vient de la digestion de l'hémoglobine par les sucs gastriques. [cite_start]Cela indique que le saignement vient de l'estomac ou de l'œsophage, pas du rectum [cite: 1083-1084].",
+        "explanation": "La couleur noire vient de la digestion de l'hémoglobine par les sucs gastriques. Cela indique que le saignement vient de l'estomac ou de l'œsophage, pas du rectum [cite: 1083-1084].",
         "tag": "Sémiologie Digestive"
     },
     {
@@ -771,7 +771,7 @@ db_questions = {
         "answer": "Une difficulté à uriner avec un jet faible, nécessitant de pousser",
         "type": "qcm",
         "level": "Intermédiaire",
-        "explanation": "Attention au piège fréquent ! La brûlure mictionnelle (souvent appelée à tort dysurie dans le langage courant) n'est pas la définition médicale stricte. [cite_start]La dysurie est un trouble du débit (jet faible) lié à un obstacle (ex: prostate) [cite: 1153-1155].",
+        "explanation": "Attention au piège fréquent ! La brûlure mictionnelle (souvent appelée à tort dysurie dans le langage courant) n'est pas la définition médicale stricte. La dysurie est un trouble du débit (jet faible) lié à un obstacle (ex: prostate) [cite: 1153-1155].",
         "tag": "Sémiologie Urinaire"
     },
     {
@@ -779,7 +779,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "La radio et le scanner utilisent les Rayons X (absorption différentielle par les tissus, irradiant). L'IRM utilise un champ magnétique et des ondes radio (résonance des protons, non irradiant).",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "Le scanner voit bien l'os et le poumon[cite: 1229, 1251]. [cite_start]L'IRM est supérieure pour les tissus mous (cerveau, muscles, tendons)[cite: 1267].",
+        "explanation": "Le scanner voit bien l'os et le poumon[cite: 1229, 1251]. L'IRM est supérieure pour les tissus mous (cerveau, muscles, tendons)[cite: 1267].",
         "tag": "Imagerie"
     },
     {
@@ -793,7 +793,7 @@ db_questions = {
         "answer": "Une sensation de brûlure rétro-sternale ascendante",
         "type": "qcm",
         "level": "Intermédiaire",
-        "explanation": "C'est le signe typique du Reflux Gastro-Œsophagien (RGO). [cite_start]La brûlure part de l'épigastre et remonte derrière le sternum[cite: 1058].",
+        "explanation": "C'est le signe typique du Reflux Gastro-Œsophagien (RGO). La brûlure part de l'épigastre et remonte derrière le sternum[cite: 1058].",
         "tag": "Sémiologie Digestive"
     },
 
@@ -803,7 +803,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est un désamorçage de la pompe cardiaque ou une chute brutale de tension (<60 mmHg). Signes : Pâleur, Froideur des extrémités, Marbrures, Tachycardie (pour compenser), et Anurie.",
         "level": "Avancé",
-        "explanation": "Le corps sacrifie la périphérie (peau, reins) par vasoconstriction pour maintenir le sang vers les organes vitaux (cerveau, cœur). [cite_start]C'est une urgence vitale [cite: 1107-1112].",
+        "explanation": "Le corps sacrifie la périphérie (peau, reins) par vasoconstriction pour maintenir le sang vers les organes vitaux (cerveau, cœur). C'est une urgence vitale [cite: 1107-1112].",
         "tag": "Urgence Vitale"
     },
     {
@@ -817,7 +817,7 @@ db_questions = {
         "answer": "La présence anormale de graisses dans les selles (selles brillantes, flottantes, collantes)",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "Elle traduit une malabsorption des graisses (ex: insuffisance pancréatique). [cite_start]Les selles collent à la cuvette ou font des 'yeux' d'huile [cite: 1079-1080].",
+        "explanation": "Elle traduit une malabsorption des graisses (ex: insuffisance pancréatique). Les selles collent à la cuvette ou font des 'yeux' d'huile [cite: 1079-1080].",
         "tag": "Sémiologie Digestive"
     },
     {
@@ -825,7 +825,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est une 'fausse constipation' terminale. Les selles arrivent bien dans l'ampoule rectale (transit normal) mais le réflexe de défécation ne se déclenche pas (perte de sensibilité rectale).",
         "level": "Avancé",
-        [cite_start]"explanation": "Fréquente chez la personne âgée, elle peut conduire à l'incontinence par regorgement ou à la formation de fécalomes, car le patient ne 'sent' pas qu'il doit aller à la selle [cite: 1085-1088].",
+        "explanation": "Fréquente chez la personne âgée, elle peut conduire à l'incontinence par regorgement ou à la formation de fécalomes, car le patient ne 'sent' pas qu'il doit aller à la selle [cite: 1085-1088].",
         "tag": "Sémiologie Digestive"
     },
     {
@@ -839,7 +839,7 @@ db_questions = {
         "answer": "C'est une imagerie fonctionnelle/métabolique : on injecte un traceur radioactif qui se fixe sur les cellules actives, permettant de voir le fonctionnement de l'organe et non juste son anatomie",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "La radio montre l'os cassé (structure). [cite_start]La scintigraphie montre l'os qui se 'répare' ou une métastase active (fonction/métabolisme) [cite: 1271-1275].",
+        "explanation": "La radio montre l'os cassé (structure). La scintigraphie montre l'os qui se 'répare' ou une métastase active (fonction/métabolisme) [cite: 1271-1275].",
         "tag": "Imagerie"
     },
     {
@@ -847,7 +847,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "C'est une rétention aiguë d'urine (la vessie est pleine mais ne peut se vider à cause d'un obstacle). On observe une douleur hypogastrique intense et une masse arrondie (convexité) palpable et mate à la percussion au-dessus du pubis.",
         "level": "Avancé",
-        "explanation": "C'est une urgence urologique douloureuse nécessitant un sondage évacuateur. [cite_start]Attention : à distinguer de l'anurie (vessie vide car reins ne produisent rien) [cite: 1156-1157].",
+        "explanation": "C'est une urgence urologique douloureuse nécessitant un sondage évacuateur. Attention : à distinguer de l'anurie (vessie vide car reins ne produisent rien) [cite: 1156-1157].",
         "tag": "Sémiologie Urinaire"
     },
     {
@@ -861,7 +861,7 @@ db_questions = {
         "answer": "Le Schéma Corporel est une réalité physiologique/neuro-motrice (repérage dans l'espace), l'Image du Corps est une représentation psycho-affective subjective (liée à l'histoire et aux émotions)",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "Cette distinction est fondamentale en psychomotricité. [cite_start]On peut avoir un schéma corporel intact (je sais bouger) mais une image du corps défaillante (je me sens morcelé ou gros alors que je suis maigre) [cite: 791-792].",
+        "explanation": "Cette distinction est fondamentale en psychomotricité. On peut avoir un schéma corporel intact (je sais bouger) mais une image du corps défaillante (je me sens morcelé ou gros alors que je suis maigre) [cite: 791-792].",
         "tag": "Psychomotricité"
     },
     {
@@ -875,7 +875,7 @@ db_questions = {
         "answer": "Un écoulement liquidien nasal (nez qui coule), séreux ou purulent",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "Elle peut être antérieure (par les narines) ou postérieure (dans la gorge). Si c'est de l'eau claire = séreux (allergie/viral). [cite_start]Si c'est épais/jaune = purulent (surinfection) [cite: 1000-1004].",
+        "explanation": "Elle peut être antérieure (par les narines) ou postérieure (dans la gorge). Si c'est de l'eau claire = séreux (allergie/viral). Si c'est épais/jaune = purulent (surinfection) [cite: 1000-1004].",
         "tag": "Sémiologie ORL"
     },
     {
@@ -889,7 +889,7 @@ db_questions = {
         "answer": "Une technique utilisant les rayons X pour mesurer spécifiquement la densité minérale osseuse",
         "type": "qcm",
         "level": "Avancé",
-        [cite_start]"explanation": "C'est l'examen de référence pour diagnostiquer l'ostéoporose et évaluer le risque de fracture[cite: 1256].",
+        "explanation": "C'est l'examen de référence pour diagnostiquer l'ostéoporose et évaluer le risque de fracture[cite: 1256].",
         "tag": "Imagerie"
     },
     {
@@ -897,7 +897,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Pour prévenir le risque de 'fausse route' (pneumopathie d'inhalation). Il faut tester avec une gorgée d'eau pour vérifier que le patient avale correctement sans tousser.",
         "level": "Avancé",
-        [cite_start]"explanation": "Le cours précise ironiquement : 'Il vaut mieux tester avec une gorgée d'eau qu'avec le repas du soir !' [cite: 1202-1204].",
+        "explanation": "Le cours précise ironiquement : 'Il vaut mieux tester avec une gorgée d'eau qu'avec le repas du soir !' [cite: 1202-1204].",
         "tag": "Sémiologie Pratique"
     },
     {
@@ -905,7 +905,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Elle permet de visualiser l'intérieur des cavités ou conduits de l'organisme (estomac, bronches, colon) grâce à un tube souple muni d'une caméra et de faire des prélèvements (biopsies).",
         "level": "Avancé",
-        "explanation": "C'est un examen invasif, contrairement à l'imagerie externe. [cite_start]Ex: Gastroscopie (estomac), Coloscopie (colon), Bronchoscopie (poumons)[cite: 1299, 1301].",
+        "explanation": "C'est un examen invasif, contrairement à l'imagerie externe. Ex: Gastroscopie (estomac), Coloscopie (colon), Bronchoscopie (poumons)[cite: 1299, 1301].",
         "tag": "Imagerie Interventionnelle"
     },
     {
@@ -919,7 +919,7 @@ db_questions = {
         "answer": "Elles potentialisent l'action inhibitrice du GABA (effet calmant, anxiolytique, sédatif)",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "Le GABA est le principal neurotransmetteur inhibiteur du cerveau ('le frein'). Les BZD appuient sur ce frein. Effets : anxiolytique, sédatif, myorelaxant, anticonvulsivant [cite: 214-215].",
+        "explanation": "Le GABA est le principal neurotransmetteur inhibiteur du cerveau ('le frein'). Les BZD appuient sur ce frein. Effets : anxiolytique, sédatif, myorelaxant, anticonvulsivant [cite: 214-215].",
         "tag": "Pharmacologie Psychotrope"
     },
     {
@@ -933,7 +933,7 @@ db_questions = {
         "answer": "Échelle Visuelle Analogique (la réglette)",
         "type": "qcm",
         "level": "Basique",
-        "explanation": "C'est l'outil de référence pour l'auto-évaluation. [cite_start]Le patient déplace un curseur entre 'Pas de douleur' et 'Douleur maximale imaginable'[cite: 292, 305].",
+        "explanation": "C'est l'outil de référence pour l'auto-évaluation. Le patient déplace un curseur entre 'Pas de douleur' et 'Douleur maximale imaginable'[cite: 292, 305].",
         "tag": "Douleur"
     },
     {
@@ -947,7 +947,7 @@ db_questions = {
         "answer": "Une affection neurologique chronique caractérisée par la répétition de crises dues à des décharges électriques neuronales excessives",
         "type": "qcm",
         "level": "Basique",
-        "explanation": "C'est un 'orage électrique' dans le cerveau. [cite_start]Elle peut être partielle (focale) ou généralisée[cite: 120].",
+        "explanation": "C'est un 'orage électrique' dans le cerveau. Elle peut être partielle (focale) ou généralisée[cite: 120].",
         "tag": "Neurologie"
     },
     {
@@ -956,7 +956,7 @@ db_questions = {
         "answer": "L'école maternelle",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "Elle a transformé les 'salles d'asile' (garderies) en véritables écoles maternelles éducatives, respectueuses du développement de l'enfant[cite: 1380].",
+        "explanation": "Elle a transformé les 'salles d'asile' (garderies) en véritables écoles maternelles éducatives, respectueuses du développement de l'enfant[cite: 1380].",
         "tag": "Histoire Éducation"
     },
     {
@@ -965,7 +965,7 @@ db_questions = {
         "answer": "Un calmant qui diminue l'activité mentale (ex: anxiolytiques, hypnotiques, neuroleptiques)",
         "type": "qcm",
         "level": "Basique",
-        [cite_start]"explanation": "Classification de Delay et Deniker : Psycholeptiques (calmants), Psychoanaleptiques (stimulants), Psychodysleptiques (perturbateurs)[cite: 219].",
+        "explanation": "Classification de Delay et Deniker : Psycholeptiques (calmants), Psychoanaleptiques (stimulants), Psychodysleptiques (perturbateurs)[cite: 219].",
         "tag": "Pharmacologie Psychotrope"
     },
 
@@ -975,7 +975,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Nociceptive : signal d'alarme normal suite à une lésion tissulaire (coupure, brûlure), système nerveux intact. Neuropathique : lésion du système nerveux lui-même (nerf coupé, zona), douleur anormale (décharges, fourmillements).",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "Les antalgiques classiques (paracétamol) marchent bien sur le nociceptif, mais très mal sur le neuropathique (qui nécessite des antiépileptiques ou antidépresseurs) [cite: 245-251].",
+        "explanation": "Les antalgiques classiques (paracétamol) marchent bien sur le nociceptif, mais très mal sur le neuropathique (qui nécessite des antiépileptiques ou antidépresseurs) [cite: 245-251].",
         "tag": "Douleur"
     },
     {
@@ -983,7 +983,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Somnolence diurne, troubles de la mémoire (amnésie antérograde), risque de chute (myorelaxation), et risque de dépendance/accoutumance.",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "C'est pourquoi la durée de prescription est limitée légalement (ex: 12 semaines pour l'anxiété)[cite: 227, 233].",
+        "explanation": "C'est pourquoi la durée de prescription est limitée légalement (ex: 12 semaines pour l'anxiété)[cite: 227, 233].",
         "tag": "Iatrogénie"
     },
     {
@@ -997,7 +997,7 @@ db_questions = {
         "answer": "Une suspension brève de la conscience (quelques secondes), l'enfant s'arrête, regard fixe, puis reprend son activité",
         "type": "qcm",
         "level": "Intermédiaire",
-        "explanation": "Typique de l'enfant. Souvent confondu avec de la rêverie à l'école. [cite_start]Il n'y a pas de chute ni de convulsions [cite: 126, 173-176].",
+        "explanation": "Typique de l'enfant. Souvent confondu avec de la rêverie à l'école. Il n'y a pas de chute ni de convulsions [cite: 126, 173-176].",
         "tag": "Neurologie"
     },
     {
@@ -1005,7 +1005,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "Ce sont des manières d'agir, de penser et de sentir, extérieures à l'individu et qui s'imposent à lui par la coercition (pression sociale).",
         "level": "Intermédiaire",
-        "explanation": "Exemple : la mode, la politesse, les rituels. [cite_start]On croit choisir, mais la société nous dicte inconsciemment ces comportements[cite: 777].",
+        "explanation": "Exemple : la mode, la politesse, les rituels. On croit choisir, mais la société nous dicte inconsciemment ces comportements[cite: 777].",
         "tag": "Sociologie"
     },
     {
@@ -1014,7 +1014,7 @@ db_questions = {
         "answer": "La loi pour l'égalité des droits et des chances, la participation et la citoyenneté des personnes handicapées",
         "type": "qcm",
         "level": "Intermédiaire",
-        [cite_start]"explanation": "Elle pose le principe de scolarisation en milieu ordinaire comme priorité et crée les MDPH[cite: 1380].",
+        "explanation": "Elle pose le principe de scolarisation en milieu ordinaire comme priorité et crée les MDPH[cite: 1380].",
         "tag": "Législation Handicap"
     },
 
@@ -1024,7 +1024,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "1. Phase Tonique (raideur, chute, cri, apnée). 2. Phase Clonique (secousses musculaires rythmées). 3. Phase Résolutive (coma stertoreux, relâchement sphincters) avec confusion au réveil.",
         "level": "Avancé",
-        "explanation": "C'est la forme la plus impressionnante. [cite_start]Le danger immédiat est la chute et l'obstruction des voies aériennes, pas la crise elle-même (le cerveau 'disjoncte' pour se protéger) [cite: 183-186].",
+        "explanation": "C'est la forme la plus impressionnante. Le danger immédiat est la chute et l'obstruction des voies aériennes, pas la crise elle-même (le cerveau 'disjoncte' pour se protéger) [cite: 183-186].",
         "tag": "Neurologie"
     },
     {
@@ -1038,7 +1038,7 @@ db_questions = {
         "answer": "Car ces médicaments agissent sur l'excitabilité des neurones et les voies de modulation de la douleur, indépendamment de leur effet sur l'humeur",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "La douleur neuropathique est une 'épilepsie du nerf'. [cite_start]Les antiépileptiques (Lyrica, Neurontin) calment cette hyperexcitabilité électrique[cite: 263].",
+        "explanation": "La douleur neuropathique est une 'épilepsie du nerf'. Les antiépileptiques (Lyrica, Neurontin) calment cette hyperexcitabilité électrique[cite: 263].",
         "tag": "Pharmacologie Douleur"
     },
     {
@@ -1052,7 +1052,7 @@ db_questions = {
         "answer": "Elle proclame la liberté d'enseignement, permettant à l'Église (congrégations religieuses) de prendre une place très influente dans l'éducation secondaire",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "C'était une réaction conservatrice. [cite_start]Les lois Ferry viendront plus tard (1881) pour laïciser l'école publique en réaction à cette influence[cite: 1380].",
+        "explanation": "C'était une réaction conservatrice. Les lois Ferry viendront plus tard (1881) pour laïciser l'école publique en réaction à cette influence[cite: 1380].",
         "tag": "Histoire Éducation"
     },
     {
@@ -1068,7 +1068,7 @@ db_questions = {
         "type": "ouverte",
         "answer": "On passe d'une visée curative (supprimer la cause) à une visée ré-adaptative (vivre avec, réduire l'impact). L'approche devient pluridisciplinaire (biopsycho-sociale) et non plus seulement médicamenteuse.",
         "level": "Avancé",
-        "explanation": "La douleur chronique devient une maladie en soi ('Douleur maladie'). Le traitement purement pharmacologique est souvent échec. [cite_start]Il faut traiter la dépression associée et rééduquer [cite: 281-287].",
+        "explanation": "La douleur chronique devient une maladie en soi ('Douleur maladie'). Le traitement purement pharmacologique est souvent échec. Il faut traiter la dépression associée et rééduquer [cite: 281-287].",
         "tag": "Douleur"
     },
     {
@@ -1082,7 +1082,7 @@ db_questions = {
         "answer": "Un état de complet bien-être physique, mental et social, et ne consiste pas seulement en une absence de maladie",
         "type": "qcm",
         "level": "Avancé",
-        [cite_start]"explanation": "C'est une définition idéaliste mais qui a révolutionné la médecine en incluant le psychique et le social, fondant ainsi la psychomotricité [cite: 863-865].",
+        "explanation": "C'est une définition idéaliste mais qui a révolutionné la médecine en incluant le psychique et le social, fondant ainsi la psychomotricité [cite: 863-865].",
         "tag": "Santé Publique"
     },
     {
@@ -1104,7 +1104,7 @@ db_questions = {
         "answer": "Un syndrome de sevrage sévère pouvant aller jusqu'à des crises convulsives (effet rebond)",
         "type": "qcm",
         "level": "Avancé",
-        "explanation": "Le cerveau, habitué au 'frein' chimique, s'emballe si on l'enlève d'un coup. [cite_start]La décroissance doit toujours être progressive[cite: 227].",
+        "explanation": "Le cerveau, habitué au 'frein' chimique, s'emballe si on l'enlève d'un coup. La décroissance doit toujours être progressive[cite: 227].",
         "tag": "Sécurité Pharmaco"
     },
     {
@@ -1998,8 +1998,7 @@ db_questions = {
         "level": "Avancé",
         "explanation": "L'acromion s'articule avec la clavicule. C'est un repère essentiel pour la palpation de l'épaule.",
         "tag": "Ostéologie - Membre Sup"
-    }
-    {
+    }, {
         "q": "En embryologie, quelle structure est à l'origine de tout le Système Nerveux Central ?",
         "options": ["L'Endoderme", "Le Tube Neural (ectoderme)", "La Corde", "Le Mésoderme"],
         "answer": "Le Tube Neural (ectoderme)",
