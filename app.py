@@ -8,50 +8,32 @@ import copy
 import re
 
 
-def _homogenize_option_structure(text: str) -> str:
-    """Homogénéise la structure grammaticale des propositions (affichage uniquement).
+def _shorten_option_for_display(text: str, max_len: int = 110) -> str:
+    """Raccourcit une proposition uniquement pour l'affichage (sans changer la valeur).
 
-    Objectif : limiter les indices du type "la bonne réponse est plus longue / plus explicative".
-    On ne modifie pas la valeur réelle utilisée pour la correction, seulement le rendu.
+    Objectif : éviter que la bonne réponse soit "grillée" parce qu'elle est beaucoup plus longue
+    ou plus explicative que les distracteurs.
     """
     if not isinstance(text, str):
         return str(text)
-
     s = " ".join(text.strip().split())
-    # Retire puces éventuelles
-    s = re.sub(r"^[\-•\u2022\*]+\s*", "", s)
-
-    lower = s.lower()
-
-    # Normalisations simples (FR)
-    if lower.startswith("parce que "):
-        s2 = s
-    elif lower.startswith("car "):
-        s2 = "Parce que " + s[4:].lstrip()
-    elif lower.startswith("c'"):
-        # "C'est ..." -> "Parce que c'est ..."
-        s2 = "Parce que " + s[0].lower() + s[1:]
-    elif lower.startswith("ce "):
-        s2 = "Parce que " + s[0].lower() + s[1:]
-    elif lower.startswith("pour "):
-        # "Pour ..." -> "Parce que c'est pour ..."
-        s2 = "Parce que c'est " + s[0].lower() + s[1:]
-    else:
-        # Par défaut, on préfixe
-        s2 = "Parce que " + (s[0].lower() + s[1:] if s else s)
-
-    # Nettoyage espaces
-    return " ".join(s2.strip().split())
-
-
-def _option_display_label(text: str, max_words: int = 12) -> str:
-    """Version courte et homogène pour le QCM (sans '...')."""
-    s = _homogenize_option_structure(text)
-    words = s.split()
-    if len(words) <= max_words:
+    if len(s) <= max_len:
         return s
-    return " ".join(words[:max_words])
 
+    # Essaie de couper proprement sur un séparateur courant.
+    cut_min = max(50, int(max_len * 0.6))
+    separators = [";", ",", " (", " car ", " parce que ", " afin de ", " pour "]
+    best_cut = None
+    for sep in separators:
+        idx = s.find(sep, cut_min)
+        if idx != -1 and idx <= max_len:
+            best_cut = idx
+            break
+
+    if best_cut is None:
+        best_cut = max_len
+
+    return s[:best_cut].rstrip(" ,;:-") + "…"
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
@@ -6957,11 +6939,78 @@ menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"]
 
 # --- FONCTIONS UTILES ---
 
+def _extract_keywords_fr(text: str, max_keywords: int = 4) -> list[str]:
+    """Extraction très légère de mots-clés (sans dépendances NLP) pour rester cohérent avec le sujet."""
+    if not isinstance(text, str):
+        return []
+    stop = {
+        "alors","ainsi","aussi","avec","avoir","chez","comme","dans","de","des","du","elle","elles","en","est","et",
+        "être","fait","faire","il","ils","je","la","le","les","leur","lors","mais","ne","notre","nous","on","ou",
+        "par","pas","plus","pour","quand","que","qui","sa","se","ses","si","son","sont","sur","te","tes","toi",
+        "tu","un","une","vos","votre","vous","au","aux","ce","ces","cet","cette","d","l","m","n","s","t","y",
+        "à","â","é","è","ê","ë","î","ï","ô","ù","û","ç"
+    }
+    # mots = uniquement lettres (on évite chiffres / symboles)
+    words = re.findall(r"[A-Za-zÀ-ÖØ-öø-ÿ]+", text.lower())
+    words = [w for w in words if len(w) >= 5 and w not in stop]
+    # petit scoring par fréquence
+    freq = {}
+    for w in words:
+        freq[w] = freq.get(w, 0) + 1
+    # tri fréquence puis longueur
+    ranked = sorted(freq.items(), key=lambda kv: (kv[1], len(kv[0])), reverse=True)
+    return [w for w, _ in ranked[:max_keywords]]
+
+def _expand_distractor(option: str, keywords: list[str], target_len: int) -> str:
+    """Allonge un distracteur de façon neutre et plausible (sans créer d'indices évidents)."""
+    if not isinstance(option, str):
+        return option
+    opt = option.strip()
+    if len(opt) >= int(target_len * 0.9):
+        return opt
+
+    # Quelques gabarits neutres (variés) pour éviter l'effet 'copier-coller'
+    templates = [
+        " dans le contexte de {kw}.",
+        " au regard de {kw}.",
+        " en lien avec {kw}.",
+        " selon la situation clinique ({kw}).",
+        " dans ce cadre ({kw}).",
+        " lors de la prise en charge ({kw}).",
+    ]
+    kw = ", ".join(keywords[:3]) if keywords else "le sujet"
+    # On ajoute des morceaux jusqu'à s'approcher de la longueur cible
+    safety = 0
+    while len(opt) < int(target_len * 0.92) and safety < 6:
+        opt += random.choice(templates).format(kw=kw)
+        safety += 1
+    # Nettoyage espaces
+    opt = re.sub(r"\s+", " ", opt).strip()
+    return opt
+
+def _balance_qcm_options(question_text: str, options: list[str], answer: str) -> list[str]:
+    """Rend les distracteurs moins 'courts' que la bonne réponse en les allongeant légèrement."""
+    if not options or not isinstance(options, list) or not isinstance(answer, str):
+        return options
+    keywords = _extract_keywords_fr(question_text, max_keywords=4)
+    target_len = max(len(answer.strip()), 40)
+
+    balanced = []
+    for opt in options:
+        if isinstance(opt, str) and opt.strip() != answer.strip():
+            balanced.append(_expand_distractor(opt, keywords, target_len))
+        else:
+            balanced.append(opt.strip() if isinstance(opt, str) else opt)
+    return balanced
+
 def _prepare_question_for_quiz(q: dict) -> dict:
-    """Retourne une copie de la question, en mélangeant l'ordre des options pour les QCM.
-    Important: on ne modifie pas db_questions en place (sinon l'ordre reste mélangé partout)."""
+    """Retourne une copie de la question.
+    - Pour les QCM : allonge légèrement les distracteurs trop courts (cohérence via mots-clés du prompt),
+      puis mélange l'ordre des options.
+    Important: on ne modifie pas db_questions en place."""
     q2 = copy.deepcopy(q)
     if q2.get("type") == "qcm" and isinstance(q2.get("options"), list):
+        q2["options"] = _balance_qcm_options(q2.get("question", ""), q2["options"], q2.get("answer", ""))
         random.shuffle(q2["options"])
     return q2
 
@@ -7111,7 +7160,7 @@ elif menu == "Passer un Quiz":
                     options_with_id,
                     key=f"radio_{q_id}",
                     index=None,
-                    format_func=lambda t: f"{chr(65 + t[0])}. {_option_display_label(t[1])}",
+                    format_func=lambda t: f"{chr(65 + t[0])}. {_shorten_option_for_display(t[1])}",
                 )
                 user_choice = selected[1] if selected is not None else None
                 if st.button(f"Valider", key=f"btn_{q_id}"):
@@ -7129,15 +7178,6 @@ elif menu == "Passer un Quiz":
                     else:
                         st.error(f"Faux. Réponse : {q['answer']}")
                     st.info(f"💡 {q['explanation']}")
-
-                    with st.expander("Voir les propositions complètes"):
-                        for i, opt in options_with_id:
-                            letter = chr(65 + i)
-                            if opt == q["answer"]:
-                                st.markdown(f"**{letter}. {opt}** ✅")
-                            else:
-                                st.markdown(f"{letter}. {opt}")
-
 
             elif q["type"] == "ouverte":
                 st.text_area("Ta réflexion :", key=f"txt_{q_id}")
