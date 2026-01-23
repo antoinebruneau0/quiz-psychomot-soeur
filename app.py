@@ -17,6 +17,12 @@ st.markdown("""
     .metric-card { background-color: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid #4e73df; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
     .feedback-box { padding: 15px; border-radius: 10px; margin-top: 10px; background-color: #e8f4f8; border-left: 5px solid #2e86de; color: #1e3799; }
     .question-card { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e0e0e0; }
+    .question-title {
+        color: #1f2d3d;
+        font-size: 1.3em;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
     h1, h2, h3 { color: #2c3e50; font-family: 'Segoe UI', sans-serif; }
 </style>
 """, unsafe_allow_html=True)
@@ -7179,7 +7185,7 @@ elif menu == "Passer un Quiz":
         
         for i, q in enumerate(questions):
             st.markdown(f"<div class='question-card'><h5>Question {i+1} <span style='background:#eee;padding:2px 5px;border-radius:5px;font-size:0.7em'>{q['tag']}</span></h5>", unsafe_allow_html=True)
-            st.write(f"**{q['q']}**")
+            st.markdown(f"<div class='question-title'>{q['q']}</div>",unsafe_allow_html=True)
             q_hash = hash(q['q']) 
             q_id = f"{module_choisi}_{q_hash}"
             
