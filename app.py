@@ -6980,7 +6980,11 @@ def _shorten_to_target_len(text: str, target_len: int) -> str:
     # Nettoyage: éviter de finir sur une préposition / mot-outil
     trailing_bad = {
         "sur","de","d'","du","des","à","au","aux","pour","par","dans","en","avec","sans",
-        "chez","vers","sous","entre","contre","selon","afin","comme","que","qui","dont"
+        "chez","vers","sous","entre","contre","selon","afin","comme","que","qui","dont",
+        # Articles / déterminants (évite les fins du type "sur la", "de la", etc.)
+        "la","le","les","un","une","l'","l","ce","cet","cette","ces",
+        "mon","ma","mes","ton","ta","tes","son","sa","ses","notre","nos","votre","vos",
+        "leur","leurs"
     }
     # Supprime la fin si elle se termine par un mot "mauvais"
     words = t2.split()
