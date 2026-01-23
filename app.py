@@ -6911,49 +6911,89 @@ menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"]
 
 # --- FONCTIONS UTILES ---
 
+
 def _shorten_to_target_len(text: str, target_len: int) -> str:
     """
-    Raccourcit un texte en conservant le sens au maximum, sans ajouter "..." :
-    - supprime certaines sous-clauses explicatives fréquentes
-    - coupe proprement sur une ponctuation ou un espace si nécessaire
+    Raccourcit un texte *sans ajouter de points de suspension* et en évitant les coupes
+    qui cassent le sens (ex: finir sur "sur", "de", "à", etc.).
+    Stratégie:
+    - Nettoyage + suppression de parenthèses (souvent des précisions)
+    - Suppression de sous-clauses explicatives fréquentes (on garde la proposition principale)
+    - Coupe sur une frontière "propre" avant target_len (ponctuation / séparateurs),
+      sinon sur un espace, puis nettoyage des fins malheureuses (prépositions).
     """
     if not text:
         return text
+
     t = " ".join(str(text).strip().split())
 
     # Retire les parenthèses (souvent des précisions longues)
     t = re.sub(r"\s*\([^)]*\)", "", t).strip()
 
-    # Normalise certains débuts très courts
-    t = re.sub(r"^(?:-\s*)?(?:Car|car)\s+", "", t)
-    t = re.sub(r"^(?:-\s*)?(?:Parce que|parce que)\s+", "", t)
+    # Retire un éventuel préfixe "- " (dans ta base)
+    t = re.sub(r"^\-\s*", "", t).strip()
 
     # Supprime des segments explicatifs fréquents (on garde la première proposition)
     cut_markers = [
-        " indépendamment", " quel que soit", " ce qui", " afin de", " de façon à", " de sorte que",
-        " en particulier", " notamment", " c'est-à-dire", " i\.e\.", " en effet"
+        r"\bindépendamment\b",
+        r"\bquel que soit\b",
+        r"\bce qui\b",
+        r"\bafin de\b",
+        r"\bde façon à\b",
+        r"\bde sorte que\b",
+        r"\ben particulier\b",
+        r"\bnotamment\b",
+        r"\bc['’]est-?à-?dire\b",
+        r"\bi\.?e\.?\b",
+        r"\ben effet\b",
     ]
     for cm in cut_markers:
-        t = re.split(cm, t, maxsplit=1, flags=re.IGNORECASE)[0].strip(" ,;:-")
+        parts = re.split(cm, t, maxsplit=1, flags=re.IGNORECASE)
+        if parts and parts[0]:
+            t = parts[0].strip(" ,;:-")
+    t = t.strip()
 
-    # Si encore trop long, coupe sur ponctuation avant la cible
-    if target_len and len(t) > target_len:
-        # Cherche une ponctuation avant target_len
-        punct_pos = [t.rfind(p, 0, target_len) for p in [".", ";", ":", ","]]
-        pmax = max(punct_pos)
-        if pmax > 20:  # évite de couper trop tôt
-            t = t[:pmax].strip(" ,;:-")
+    if not target_len or len(t) <= target_len:
+        # pas besoin de couper, mais on évite toute ponctuation finale "grillée"
+        return t.rstrip(" .;:,-")
 
-    # Si encore trop long, coupe sur espace
-    if target_len and len(t) > target_len:
-        cut = t.rfind(" ", 0, target_len)
-        if cut > 20:
-            t = t[:cut].strip(" ,;:-")
+    # Cherche une frontière "propre" avant target_len
+    candidates = []
+    for p in [".", ";", ":", ","]:
+        pos = t.rfind(p, 0, target_len + 1)
+        if pos != -1:
+            candidates.append(pos)
+    # Séparateurs explicatifs (on coupe avant eux)
+    for sep in [" mais ", " car ", " parce que ", " afin de ", " de sorte que ", " ce qui "]:
+        pos = t.lower().rfind(sep, 0, target_len + 1)
+        if pos != -1:
+            candidates.append(pos)
 
-    # Ajoute un point si on termine sur une lettre et que ça ressemble à une phrase
-    if t and t[-1].isalnum() and len(t) > 25:
-        t += "."
-    return t
+    cut = max(candidates) if candidates else -1
+    if cut >= 25:
+        t2 = t[:cut].strip(" ,;:-")
+    else:
+        # sinon coupe au dernier espace
+        sp = t.rfind(" ", 0, target_len + 1)
+        t2 = t[:sp].strip(" ,;:-") if sp >= 25 else t[:target_len].strip(" ,;:-")
+
+    # Nettoyage: éviter de finir sur une préposition / mot-outil
+    trailing_bad = {
+        "sur","de","d'","du","des","à","au","aux","pour","par","dans","en","avec","sans",
+        "chez","vers","sous","entre","contre","selon","afin","comme","que","qui","dont"
+    }
+    # Supprime la fin si elle se termine par un mot "mauvais"
+    words = t2.split()
+    while words and words[-1].lower().strip("’'") in trailing_bad:
+        words = words[:-1]
+    t2 = " ".join(words).strip()
+
+    # Si après nettoyage c'est devenu trop court, on revient à la version non nettoyée (mais sans ponctuation finale)
+    if len(t2) < 20:
+        t2 = t2 or t[:target_len].strip(" ,;:-")
+
+    return t2.rstrip(" .;:,-")
+
 
 def _prepare_question_for_quiz(q: dict) -> dict:
     """Retourne une copie de la question, en mélangeant l'ordre des options pour les QCM,
