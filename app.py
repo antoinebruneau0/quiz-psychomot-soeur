@@ -7178,7 +7178,7 @@ elif menu == "Passer un Quiz":
         questions = st.session_state.quiz_batch
         
         for i, q in enumerate(questions):
-            st.markdown(f"<div class='question-card'><h5>Question {i+1} <span style='background:#eee;padding:2px 5px;border-radius:5px;font-size:0.7em'>{q['tag']}</span></h5>", unsafe_allow_html=True)
+            st.markdown(f"<div class='question-card'>"f"<h5 style='color:#2c3e50; margin-bottom:12px;'>"f"Question {i+1} "f"<span style='background:#eee; color:#2c3e50; padding:2px 6px; border-radius:5px; font-size:0.75em;'>"f"{q['tag']}</span>"f"</h5>",unsafe_allow_html=True)
             st.write(f"**{q['q']}**")
             q_hash = hash(q['q']) 
             q_id = f"{module_choisi}_{q_hash}"
