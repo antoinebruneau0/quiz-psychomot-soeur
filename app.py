@@ -3,9 +3,126 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 import random
+import re
 import json
 import copy
-import re
+
+
+# ----------------- QCM: générateur de distracteurs "crédibles" -----------------
+# Objectif: éviter que la bonne réponse soit "grillée" par sa longueur / précision.
+# Stratégie: générer 3 propositions fausses mais plausibles (near-miss) à partir de la question + bonne réponse,
+# sans modifier le sens de la bonne réponse. On n'écrit pas dans db_questions: on travaille sur une copie au moment du quiz.
+
+_CONFUSABLES = [
+    # (pattern, replacement) pairs (regex, repl) — appliqués de façon contrôlée
+    (r"\baugmentation\b", "diminution"),
+    (r"\bdiminution\b", "augmentation"),
+    (r"\bstimule\b", "inhibe"),
+    (r"\binhibe\b", "stimule"),
+    (r"\bexcitabilit[ée]\b", "inhibition"),
+    (r"\binhibition\b", "excitabilité"),
+    (r"\b(sympathique)\b", "parasympathique"),
+    (r"\b(parasympathique)\b", "sympathique"),
+    (r"\bcentral(e|es)?\b", "périphérique"),
+    (r"\bpériphérique(s|)?\b", "central"),
+    (r"\bafférent(e|es)?\b", "efférent"),
+    (r"\befférent(e|es)?\b", "afférent"),
+    (r"\bagoniste\b", "antagoniste"),
+    (r"\bantagoniste\b", "agoniste"),
+    (r"\bexcitateur\b", "inhibiteur"),
+    (r"\binhibiteur\b", "excitateur"),
+    (r"\bprospective\b", "rétrospective"),
+    (r"\brétrospective\b", "prospective"),
+    (r"\bspécifique\b", "non spécifique"),
+    (r"\bnon spécifique\b", "spécifique"),
+    (r"\b(circulation générale)\b", "circulation porte hépatique"),
+    (r"\beffet de premier passage (hépatique|h[ée]patique)\b", "effet de premier passage intestinal"),
+]
+
+_NEAR_MISS_TEMPLATES = [
+    "Elle correspond à {core}, mais en pratique cela dépend surtout de {twist}.",
+    "On parle de {core} ; toutefois, l'élément déterminant est {twist} plutôt que {alt}.",
+    "C'est {core}, ce qui s'explique principalement par {twist}, indépendamment de {alt}.",
+]
+
+def _normalize_ws(s: str) -> str:
+    return " ".join(str(s).strip().split())
+
+def _pick_keywords(question: str, answer: str, k: int = 3):
+    txt = _normalize_ws((question or "") + " " + (answer or "")).lower()
+    # mots "contenu" approximatifs (sans NLP lourd)
+    stop = set([
+        "de","la","le","les","des","du","un","une","et","ou","à","au","aux","en","dans","pour","par","sur","avec","sans",
+        "qui","que","quoi","dont","où","est","sont","être","cela","ceci","cette","ces","son","sa","ses","leur","leurs",
+        "plus","moins","très","ainsi","afin","car","parce","parceque","lors","lorsque","selon","chez","comme","ne","pas",
+        "se","il","elle","on","nous","vous","ils","elles"
+    ])
+    words = [w for w in re.findall(r"[a-zA-ZÀ-ÖØ-öø-ÿ']+", txt) if len(w) >= 5 and w not in stop]
+    freq = {}
+    for w in words:
+        freq[w] = freq.get(w, 0) + 1
+    top = sorted(freq.items(), key=lambda x: (-x[1], -len(x[0])))[:k]
+    return [w for w,_ in top] or ["mécanisme", "situation", "prise en charge"]
+
+def _apply_one_confusable(text: str) -> str:
+    s = _normalize_ws(text)
+    for pat, repl in _CONFUSABLES:
+        if re.search(pat, s, flags=re.IGNORECASE):
+            return re.sub(pat, repl, s, count=1, flags=re.IGNORECASE)
+    # fallback : inversion de connecteurs logiques si rien à remplacer
+    if "indépendamment" in s:
+        return s.replace("indépendamment", "uniquement", 1)
+    if "uniquement" in s:
+        return s.replace("uniquement", "indépendamment", 1)
+    if "principalement" in s:
+        return s.replace("principalement", "secondairement", 1)
+    return s
+
+def _make_plausible_sentence(question: str, answer: str, variant: int) -> str:
+    a = _normalize_ws(answer)
+    q = _normalize_ws(question)
+    kws = _pick_keywords(q, a, k=3)
+
+    core = _apply_one_confusable(a)
+    twist = f"la {kws[0]} et la {kws[1]}"
+    alt = f"la {kws[2]}"
+
+    tmpl = _NEAR_MISS_TEMPLATES[variant % len(_NEAR_MISS_TEMPLATES)]
+    s = tmpl.format(core=core, twist=twist, alt=alt)
+    s = _normalize_ws(s)
+
+    # Ajuste la longueur vers celle de la bonne réponse, sans points de suspension.
+    target = max(90, len(a))
+    if len(s) < int(target * 0.85):
+        s += " Cette formulation paraît logique, mais elle confond deux notions voisines."
+    if len(s) > int(target * 1.15):
+        cut = max(int(target * 1.10), 90)
+        # coupe sur une ponctuation
+        for m in re.finditer(r"[;,.]", s):
+            if 70 < m.start() < cut:
+                s = s[:m.start()].rstrip(" ,;:.") + "."
+                break
+    return s
+
+def _generate_distractors(question: str, answer: str, n: int = 3):
+    a = _normalize_ws(answer)
+    outs = []
+    seen = {a.lower()}
+    for i in range(12):
+        cand = _make_plausible_sentence(question, a, variant=i)
+        key = cand.lower()
+        if key in seen:
+            continue
+        if a.lower() in key and len(a) > 40:
+            continue
+        seen.add(key)
+        outs.append(cand)
+        if len(outs) >= n:
+            break
+    return outs
+# -----------------------------------------------------------------------------
+
+
 
 
 def _shorten_option_for_display(text: str, max_len: int = 110) -> str:
@@ -6939,79 +7056,29 @@ menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"]
 
 # --- FONCTIONS UTILES ---
 
-def _extract_keywords_fr(text: str, max_keywords: int = 4) -> list[str]:
-    """Extraction très légère de mots-clés (sans dépendances NLP) pour rester cohérent avec le sujet."""
-    if not isinstance(text, str):
-        return []
-    stop = {
-        "alors","ainsi","aussi","avec","avoir","chez","comme","dans","de","des","du","elle","elles","en","est","et",
-        "être","fait","faire","il","ils","je","la","le","les","leur","lors","mais","ne","notre","nous","on","ou",
-        "par","pas","plus","pour","quand","que","qui","sa","se","ses","si","son","sont","sur","te","tes","toi",
-        "tu","un","une","vos","votre","vous","au","aux","ce","ces","cet","cette","d","l","m","n","s","t","y",
-        "à","â","é","è","ê","ë","î","ï","ô","ù","û","ç"
-    }
-    # mots = uniquement lettres (on évite chiffres / symboles)
-    words = re.findall(r"[A-Za-zÀ-ÖØ-öø-ÿ]+", text.lower())
-    words = [w for w in words if len(w) >= 5 and w not in stop]
-    # petit scoring par fréquence
-    freq = {}
-    for w in words:
-        freq[w] = freq.get(w, 0) + 1
-    # tri fréquence puis longueur
-    ranked = sorted(freq.items(), key=lambda kv: (kv[1], len(kv[0])), reverse=True)
-    return [w for w, _ in ranked[:max_keywords]]
-
-def _expand_distractor(option: str, keywords: list[str], target_len: int) -> str:
-    """Allonge un distracteur de façon neutre et plausible (sans créer d'indices évidents)."""
-    if not isinstance(option, str):
-        return option
-    opt = option.strip()
-    if len(opt) >= int(target_len * 0.9):
-        return opt
-
-    # Quelques gabarits neutres (variés) pour éviter l'effet 'copier-coller'
-    templates = [
-        " dans le contexte de {kw}.",
-        " au regard de {kw}.",
-        " en lien avec {kw}.",
-        " selon la situation clinique ({kw}).",
-        " dans ce cadre ({kw}).",
-        " lors de la prise en charge ({kw}).",
-    ]
-    kw = ", ".join(keywords[:3]) if keywords else "le sujet"
-    # On ajoute des morceaux jusqu'à s'approcher de la longueur cible
-    safety = 0
-    while len(opt) < int(target_len * 0.92) and safety < 6:
-        opt += random.choice(templates).format(kw=kw)
-        safety += 1
-    # Nettoyage espaces
-    opt = re.sub(r"\s+", " ", opt).strip()
-    return opt
-
-def _balance_qcm_options(question_text: str, options: list[str], answer: str) -> list[str]:
-    """Rend les distracteurs moins 'courts' que la bonne réponse en les allongeant légèrement."""
-    if not options or not isinstance(options, list) or not isinstance(answer, str):
-        return options
-    keywords = _extract_keywords_fr(question_text, max_keywords=4)
-    target_len = max(len(answer.strip()), 40)
-
-    balanced = []
-    for opt in options:
-        if isinstance(opt, str) and opt.strip() != answer.strip():
-            balanced.append(_expand_distractor(opt, keywords, target_len))
-        else:
-            balanced.append(opt.strip() if isinstance(opt, str) else opt)
-    return balanced
-
 def _prepare_question_for_quiz(q: dict) -> dict:
-    """Retourne une copie de la question.
-    - Pour les QCM : allonge légèrement les distracteurs trop courts (cohérence via mots-clés du prompt),
-      puis mélange l'ordre des options.
-    Important: on ne modifie pas db_questions en place."""
+    """Retourne une copie de la question, prête pour le quiz.
+
+    - Pour les QCM: on régénère des distracteurs plausibles (si possible) en gardant la bonne réponse inchangée,
+      puis on mélange l'ordre des options.
+    - Important: on ne modifie pas db_questions en place.
+    """
     q2 = copy.deepcopy(q)
-    if q2.get("type") == "qcm" and isinstance(q2.get("options"), list):
-        q2["options"] = _balance_qcm_options(q2.get("question", ""), q2["options"], q2.get("answer", ""))
-        random.shuffle(q2["options"])
+
+    if q2.get("type") == "qcm":
+        question_txt = q2.get("q", "")
+        answer_txt = q2.get("answer", "")
+        # Génère 3 distracteurs "near-miss" cohérents et denses.
+        distractors = _generate_distractors(question_txt, answer_txt, n=3)
+
+        # Si on n'a pas réussi à en générer 3, on garde les options d'origine.
+        if len(distractors) == 3:
+            q2["options"] = distractors + [answer_txt]
+
+        # Mélange l'ordre d'affichage (position de la bonne réponse aléatoire).
+        if isinstance(q2.get("options"), list):
+            random.shuffle(q2["options"])
+
     return q2
 
 def get_global_stats():
