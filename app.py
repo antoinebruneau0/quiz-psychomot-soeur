@@ -5,6 +5,34 @@ from datetime import datetime
 import random
 import json
 import copy
+
+
+def _shorten_option_for_display(text: str, max_len: int = 110) -> str:
+    """Raccourcit une proposition uniquement pour l'affichage (sans changer la valeur).
+
+    Objectif : éviter que la bonne réponse soit "grillée" parce qu'elle est beaucoup plus longue
+    ou plus explicative que les distracteurs.
+    """
+    if not isinstance(text, str):
+        return str(text)
+    s = " ".join(text.strip().split())
+    if len(s) <= max_len:
+        return s
+
+    # Essaie de couper proprement sur un séparateur courant.
+    cut_min = max(50, int(max_len * 0.6))
+    separators = [";", ",", " (", " car ", " parce que ", " afin de ", " pour "]
+    best_cut = None
+    for sep in separators:
+        idx = s.find(sep, cut_min)
+        if idx != -1 and idx <= max_len:
+            best_cut = idx
+            break
+
+    if best_cut is None:
+        best_cut = max_len
+
+    return s[:best_cut].rstrip(" ,;:-") + "…"
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
@@ -7056,7 +7084,17 @@ elif menu == "Passer un Quiz":
             q_id = f"{module_choisi}_{q_hash}"
             
             if q["type"] == "qcm":
-                user_choice = st.radio("Réponse :", q["options"], key=f"radio_{q_id}", index=None)
+                # On garde la valeur "originale" (texte complet) pour la correction,
+                # mais on affiche une version raccourcie pour éviter les indices de longueur.
+                options_with_id = list(enumerate(q["options"]))
+                selected = st.radio(
+                    "Réponse :",
+                    options_with_id,
+                    key=f"radio_{q_id}",
+                    index=None,
+                    format_func=lambda t: f"{chr(65 + t[0])}. {_shorten_option_for_display(t[1])}",
+                )
+                user_choice = selected[1] if selected is not None else None
                 if st.button(f"Valider", key=f"btn_{q_id}"):
                     st.session_state.show_explanation[q_id] = True
                     if q_id not in st.session_state.validated_questions:
