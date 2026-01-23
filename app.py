@@ -5,34 +5,53 @@ from datetime import datetime
 import random
 import json
 import copy
+import re
 
 
-def _shorten_option_for_display(text: str, max_len: int = 110) -> str:
-    """Raccourcit une proposition uniquement pour l'affichage (sans changer la valeur).
+def _homogenize_option_structure(text: str) -> str:
+    """Homogénéise la structure grammaticale des propositions (affichage uniquement).
 
-    Objectif : éviter que la bonne réponse soit "grillée" parce qu'elle est beaucoup plus longue
-    ou plus explicative que les distracteurs.
+    Objectif : limiter les indices du type "la bonne réponse est plus longue / plus explicative".
+    On ne modifie pas la valeur réelle utilisée pour la correction, seulement le rendu.
     """
     if not isinstance(text, str):
         return str(text)
+
     s = " ".join(text.strip().split())
-    if len(s) <= max_len:
+    # Retire puces éventuelles
+    s = re.sub(r"^[\-•\u2022\*]+\s*", "", s)
+
+    lower = s.lower()
+
+    # Normalisations simples (FR)
+    if lower.startswith("parce que "):
+        s2 = s
+    elif lower.startswith("car "):
+        s2 = "Parce que " + s[4:].lstrip()
+    elif lower.startswith("c'"):
+        # "C'est ..." -> "Parce que c'est ..."
+        s2 = "Parce que " + s[0].lower() + s[1:]
+    elif lower.startswith("ce "):
+        s2 = "Parce que " + s[0].lower() + s[1:]
+    elif lower.startswith("pour "):
+        # "Pour ..." -> "Parce que c'est pour ..."
+        s2 = "Parce que c'est " + s[0].lower() + s[1:]
+    else:
+        # Par défaut, on préfixe
+        s2 = "Parce que " + (s[0].lower() + s[1:] if s else s)
+
+    # Nettoyage espaces
+    return " ".join(s2.strip().split())
+
+
+def _option_display_label(text: str, max_words: int = 12) -> str:
+    """Version courte et homogène pour le QCM (sans '...')."""
+    s = _homogenize_option_structure(text)
+    words = s.split()
+    if len(words) <= max_words:
         return s
+    return " ".join(words[:max_words])
 
-    # Essaie de couper proprement sur un séparateur courant.
-    cut_min = max(50, int(max_len * 0.6))
-    separators = [";", ",", " (", " car ", " parce que ", " afin de ", " pour "]
-    best_cut = None
-    for sep in separators:
-        idx = s.find(sep, cut_min)
-        if idx != -1 and idx <= max_len:
-            best_cut = idx
-            break
-
-    if best_cut is None:
-        best_cut = max_len
-
-    return s[:best_cut].rstrip(" ,;:-") + "…"
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
@@ -7092,7 +7111,7 @@ elif menu == "Passer un Quiz":
                     options_with_id,
                     key=f"radio_{q_id}",
                     index=None,
-                    format_func=lambda t: f"{chr(65 + t[0])}. {_shorten_option_for_display(t[1])}",
+                    format_func=lambda t: f"{chr(65 + t[0])}. {_option_display_label(t[1])}",
                 )
                 user_choice = selected[1] if selected is not None else None
                 if st.button(f"Valider", key=f"btn_{q_id}"):
@@ -7110,6 +7129,15 @@ elif menu == "Passer un Quiz":
                     else:
                         st.error(f"Faux. Réponse : {q['answer']}")
                     st.info(f"💡 {q['explanation']}")
+
+                    with st.expander("Voir les propositions complètes"):
+                        for i, opt in options_with_id:
+                            letter = chr(65 + i)
+                            if opt == q["answer"]:
+                                st.markdown(f"**{letter}. {opt}** ✅")
+                            else:
+                                st.markdown(f"{letter}. {opt}")
+
 
             elif q["type"] == "ouverte":
                 st.text_area("Ta réflexion :", key=f"txt_{q_id}")
