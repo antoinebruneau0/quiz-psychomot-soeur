@@ -3,23 +3,11 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 import random
-import json
 import re
-import collections
+import json
 import copy
-from pathlib import Path
-
-try:
-    import PyPDF2
-except Exception:
-    PyPDF2 = None
-
-
-def _shorten_option_for_display(text: str, max_len: int = 110) -> str:
-    """Dans cette version, on n'abrège plus les propositions à l'affichage.
-    On traite le problème via des distracteurs plus crédibles (même longueur)."""
-    return str(text)
-
+# --- CONFIGURATION DE LA PAGE ---
+st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
 # --- CSS PRO ---
 st.markdown("""
@@ -6923,256 +6911,96 @@ menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"]
 
 # --- FONCTIONS UTILES ---
 
-
-
-# --- OUTILS POUR DISTRACTEURS "PROF" (génération à la volée, sans modifier db_questions) ---
-
-MODULE_PDF_PATHS = {
-    "MODULE 1: Santé Pub, Pharma, Hygiène": "MODULE 1 (SANTE PUBLIC,PHARMACOLOGIE,HYGYENE).pdf",
-    "MODULE 2: Anatomie & Neuroanatomie": "MODULE 2 anatomie et neuroanatomie.pdf",
-    "MODULE 3: Physiologie": "MODULE 3 PHYSIOLOGIE.pdf",
-    "MODULE 4: Psychologie": "MODULE 4 PSYCOLOGIE.pdf",
-    "MODULE 5: Psychiatrie": "module 5 spychiatrie.pdf",
-    "MODULE 6: Psychomotricité Théorique": "module 6 psychomotricité théorique.pdf",
-}
-
-_FR_STOPWORDS = {
-    "le","la","les","un","une","des","du","de","d","et","ou","où","au","aux","en","dans","sur","pour","par","avec","sans","chez",
-    "ce","cette","ces","cet","cela","ça","qui","que","quoi","dont","où","quand","comment","pourquoi",
-    "est","sont","être","a","ont","avait","avaient","sera","seront","été","fait","faire","peut","peuvent","doit","doivent",
-    "plus","moins","très","trop","pas","ne","ni","se","sa","son","ses","leur","leurs","mon","ma","mes","ton","ta","tes",
-    "il","elle","ils","elles","on","nous","vous","je","tu",
-    "à","y","l","m","t","s","n"
-}
-
-_ANTONYM_SWAPS = [
-    (r"\baugmente\b", "diminue"),
-    (r"\bdiminue\b", "augmente"),
-    (r"\bactive\b", "inhibe"),
-    (r"\binhibe\b", "active"),
-    (r"\bstimule\b", "freine"),
-    (r"\bfreine\b", "stimule"),
-    (r"\bexcitation\b", "inhibition"),
-    (r"\binhibition\b", "excitation"),
-    (r"\bcentral\b", "périphérique"),
-    (r"\bpériphérique\b", "central"),
-    (r"\binterne\b", "externe"),
-    (r"\bexterne\b", "interne"),
-    (r"\bsympathique\b", "parasympathique"),
-    (r"\bparasympathique\b", "sympathique"),
-]
-
-# Règles ciblées (ex : ZPD/Vygotski) : si on détecte un motif, on fabrique 3 distracteurs "near miss".
-_TARGETED_RULES = [
-    # Zone proximale de développement (ZPD)
-    (
-        re.compile(r"\bzone\s+proximale\s+de\s+d[ée]veloppement\b|\bZPD\b", re.IGNORECASE),
-        lambda q, a: [
-            "L’écart entre le niveau de développement réel (ce que l’enfant sait faire seul) et ce qu’il sait faire après apprentissage stabilisé.",
-            "La capacité maximale de l’enfant à réussir seul une tâche, sans étayage ni guidance de l’adulte ou des pairs.",
-            "L’ensemble des situations scolaires et sociales dans lesquelles l’enfant apprend, indépendamment de l’aide apportée."
-        ],
-    ),
-    # Conditionnement : renforcement / punition
-    (
-        re.compile(r"\b(renforcement|punition|conditionnement)\b", re.IGNORECASE),
-        lambda q, a: [
-            "Un procédé qui augmente la probabilité d’un comportement en ajoutant ou retirant un stimulus, sans nécessairement viser la compréhension.",
-            "Une conséquence appliquée après un comportement pour en diminuer la fréquence, même si le sujet ressent un soulagement immédiat.",
-            "Un apprentissage par association temporelle entre deux événements, sans lien de causalité conscient pour le sujet."
-        ],
-    ),
-]
-
-@st.cache_data(show_spinner=False)
-def _load_module_texts():
-    """Charge le texte des PDF (si disponibles) pour nourrir un petit 'lexique' par module.
-    Si PyPDF2 n'est pas dispo ou fichier absent, on retourne {}."""
-    if PyPDF2 is None:
-        return {}
-    base_dir = Path(__file__).resolve().parent
-    texts = {}
-    for module, fname in MODULE_PDF_PATHS.items():
-        p = base_dir / fname
-        if not p.exists():
-            continue
-        try:
-            reader = PyPDF2.PdfReader(str(p))
-            full = []
-            for page in reader.pages:
-                t = page.extract_text() or ""
-                if t:
-                    full.append(t)
-            texts[module] = "\n".join(full)
-        except Exception:
-            continue
-    return texts
-
-def _tokenize_fr(text: str):
-    text = (text or "").lower()
-    text = re.sub(r"[^a-zàâäéèêëîïôöùûüç0-9\-\s']", " ", text)
-    toks = [t.strip("'-") for t in text.split()]
-    toks = [t for t in toks if len(t) >= 4 and t not in _FR_STOPWORDS and not t.isdigit()]
-    return toks
-
-@st.cache_data(show_spinner=False)
-def _build_term_bank():
-    """Construit un 'banque de termes' par module à partir des PDF + db_questions."""
-    module_texts = _load_module_texts()
-    bank = {}
-    for module, qs in db_questions.items():
-        corpus_parts = []
-        # PDF
-        if module in module_texts:
-            corpus_parts.append(module_texts[module])
-        # Questions + options
-        for item in qs:
-            corpus_parts.append(item.get("q",""))
-            for opt in item.get("options",[]) or []:
-                corpus_parts.append(str(opt))
-            corpus_parts.append(str(item.get("answer","")))
-        corpus = "\n".join(corpus_parts)
-        toks = _tokenize_fr(corpus)
-        counts = collections.Counter(toks)
-        # On garde des termes fréquents (évite le bruit)
-        terms = [w for w, c in counts.most_common(500) if c >= 3]
-        bank[module] = terms
-    return bank
-
-def _apply_antonym_swaps(text: str) -> str:
-    out = text
-    for pat, rep in _ANTONYM_SWAPS:
-        if re.search(pat, out, flags=re.IGNORECASE):
-            out = re.sub(pat, rep, out, flags=re.IGNORECASE)
-            break
-    return out
-
-def _make_near_miss(answer: str, module: str, forbid: set, rng: random.Random) -> str:
-    """Fabrique une proposition fausse mais plausible en partant de la bonne réponse."""
-    a = str(answer).strip()
-    bank = _build_term_bank().get(module, [])
-    # 1) swaps 'classiques' (augmente/diminue, etc.)
-    cand = _apply_antonym_swaps(a)
-
-    # 2) substitution de 1-2 termes (mêmes champs lexicaux)
-    toks = _tokenize_fr(cand)
-    key_toks = [t for t in toks if t in set(_tokenize_fr(a))][:6]
-    # Si pas de clé, prendre des mots longs
-    if not key_toks:
-        key_toks = sorted(set(toks), key=len, reverse=True)[:4]
-
-    bank_pool = [t for t in bank if t not in toks and t not in _FR_STOPWORDS]
-    rng.shuffle(bank_pool)
-
-    replaced = 0
-    for kt in key_toks[:2]:
-        if not bank_pool:
-            break
-        repl = bank_pool.pop()
-        # remplacer un mot entier
-        cand2 = re.sub(rf"\b{re.escape(kt)}\b", repl, cand, count=1, flags=re.IGNORECASE)
-        if cand2 != cand:
-            cand = cand2
-            replaced += 1
-
-    # 3) Garde-fous : éviter doublons/bonne réponse
-    cand = cand.strip()
-    if cand in forbid or cand.lower() == a.lower():
-        cand = _apply_antonym_swaps(a)  # fallback simple
-    return cand
-
-def _rewrite_distractors(question: dict, module: str, rng: random.Random) -> list:
-    """Retourne une nouvelle liste d'options: bonne réponse inchangée, distracteurs régénérés."""
-    options = list(question.get("options") or [])
-    answer = str(question.get("answer","")).strip()
-    qtext = str(question.get("q",""))
-
-    # si pas un QCM classique, ne rien faire
-    if not options or answer == "":
-        return options
-
-    # Appliquer règles ciblées si on match
-    for rx, gen in _TARGETED_RULES:
-        if rx.search(qtext) or rx.search(answer):
-            distractors = gen(qtext, answer)
-            # On garde 3 distracteurs uniques et pas identiques à l'answer
-            cleaned = []
-            forbid = {answer}
-            for d in distractors:
-                d = str(d).strip()
-                if d and d not in forbid:
-                    forbid.add(d)
-                    cleaned.append(d)
-                if len(cleaned) >= 3:
-                    break
-            if len(cleaned) == 3:
-                new_opts = cleaned + [answer]
-                rng.shuffle(new_opts)
-                return new_opts
-
-    # Générique : 3 near-miss autour de la bonne réponse
-    forbid = {answer}
-    distractors = []
-    for _ in range(12):  # essais pour trouver 3 uniques
-        cand = _make_near_miss(answer, module, forbid, rng)
-        cand = cand.strip()
-        if cand and cand not in forbid and cand.lower() != answer.lower():
-            forbid.add(cand)
-            distractors.append(cand)
-            if len(distractors) >= 3:
-                break
-
-    # Si on n'arrive pas à 3, on retombe sur les distracteurs existants (en les conservant)
-    if len(distractors) < 3:
-        existing = [o for o in options if str(o).strip() != answer]
-        rng.shuffle(existing)
-        for o in existing:
-            o = str(o).strip()
-            if o and o not in forbid:
-                distractors.append(o)
-                forbid.add(o)
-            if len(distractors) >= 3:
-                break
-
-    # Harmonisation de longueur (sans '...') : on coupe au même ordre de grandeur
-    target_len = max(60, min(220, len(answer)))
-    def clip(s: str) -> str:
-        s = " ".join(s.split())
-        if len(s) <= target_len:
-            return s
-        # coupe à la dernière ponctuation/espace avant target_len
-        cut = s.rfind(" ", 0, target_len)
-        if cut < 40:
-            cut = target_len
-        return s[:cut].rstrip(" ,;:.") + "."
-    distractors = [clip(d) for d in distractors[:3]]
-    answer_clean = " ".join(answer.split())
-    # on ne clippe pas l'answer (sens inchangé) mais on peut juste normaliser espaces
-    new_opts = distractors + [answer_clean]
-    rng.shuffle(new_opts)
-    return new_opts
-def _prepare_question_for_quiz(q: dict, module: str) -> dict:
-    """Retourne une copie de la question pour le quiz.
-
-    - Mélange l'ordre des options (QCM)
-    - Régénère les distracteurs pour qu'ils soient plausibles et d'une longueur comparable
-      à la bonne réponse (sans changer le sens de la bonne réponse).
-    Important: on ne modifie pas db_questions en place.
+def _shorten_to_target_len(text: str, target_len: int) -> str:
     """
+    Raccourcit un texte en conservant le sens au maximum, sans ajouter "..." :
+    - supprime certaines sous-clauses explicatives fréquentes
+    - coupe proprement sur une ponctuation ou un espace si nécessaire
+    """
+    if not text:
+        return text
+    t = " ".join(str(text).strip().split())
+
+    # Retire les parenthèses (souvent des précisions longues)
+    t = re.sub(r"\s*\([^)]*\)", "", t).strip()
+
+    # Normalise certains débuts très courts
+    t = re.sub(r"^(?:-\s*)?(?:Car|car)\s+", "", t)
+    t = re.sub(r"^(?:-\s*)?(?:Parce que|parce que)\s+", "", t)
+
+    # Supprime des segments explicatifs fréquents (on garde la première proposition)
+    cut_markers = [
+        " indépendamment", " quel que soit", " ce qui", " afin de", " de façon à", " de sorte que",
+        " en particulier", " notamment", " c'est-à-dire", " i\.e\.", " en effet"
+    ]
+    for cm in cut_markers:
+        t = re.split(cm, t, maxsplit=1, flags=re.IGNORECASE)[0].strip(" ,;:-")
+
+    # Si encore trop long, coupe sur ponctuation avant la cible
+    if target_len and len(t) > target_len:
+        # Cherche une ponctuation avant target_len
+        punct_pos = [t.rfind(p, 0, target_len) for p in [".", ";", ":", ","]]
+        pmax = max(punct_pos)
+        if pmax > 20:  # évite de couper trop tôt
+            t = t[:pmax].strip(" ,;:-")
+
+    # Si encore trop long, coupe sur espace
+    if target_len and len(t) > target_len:
+        cut = t.rfind(" ", 0, target_len)
+        if cut > 20:
+            t = t[:cut].strip(" ,;:-")
+
+    # Ajoute un point si on termine sur une lettre et que ça ressemble à une phrase
+    if t and t[-1].isalnum() and len(t) > 25:
+        t += "."
+    return t
+
+def _prepare_question_for_quiz(q: dict) -> dict:
+    """Retourne une copie de la question, en mélangeant l'ordre des options pour les QCM,
+    et en raccourcissant *à l'affichage* la bonne réponse si elle est beaucoup plus longue
+    que les distracteurs (sans modifier la réponse correcte ni db_questions)."""
     q2 = copy.deepcopy(q)
-    if q2.get("type") == "qcm" and isinstance(q2.get("options"), list) and q2.get("answer"):
-        rng = random.Random()
-        # Déterminisme léger par question (pour éviter que ça change à chaque rerun Streamlit)
-        seed_base = (str(q2.get("q","")) + "||" + str(q2.get("answer","")) + "||" + str(module)).encode("utf-8", "ignore")
-        rng.seed(sum(seed_base) % (2**32 - 1))
 
-        # Remplacer les distracteurs par des distracteurs plausibles
-        q2["options"] = _rewrite_distractors(q2, module, rng)
+    if q2.get("type") == "qcm" and isinstance(q2.get("options"), list):
+        # Mélange
+        random.shuffle(q2["options"])
 
-        # Mélange final (au cas où)
-        rng.shuffle(q2["options"])
+        # Construit une version "affichage" des options où la bonne réponse peut être raccourcie
+        answer_full = q2.get("answer", "")
+        options_full = q2["options"]
+
+        distractors = [o for o in options_full if o != answer_full]
+        if distractors:
+            # cible = longueur moyenne des distracteurs (bornée)
+            avg_len = int(sum(len(str(d)) for d in distractors) / len(distractors))
+            target_len = max(40, min(160, avg_len))  # évite trop court / trop long
+        else:
+            target_len = 120
+
+        display_options = []
+        display_to_full = {}
+
+        letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        for i, opt in enumerate(options_full):
+            opt_str = str(opt)
+            if opt_str == str(answer_full):
+                # Raccourcit uniquement si la bonne réponse est nettement plus longue
+                if len(opt_str) > target_len * 1.25:
+                    opt_disp_core = _shorten_to_target_len(opt_str, target_len)
+                else:
+                    opt_disp_core = " ".join(opt_str.strip().split())
+            else:
+                opt_disp_core = " ".join(opt_str.strip().split())
+
+            # Préfixe par une lettre pour éviter collisions + mapping fiable
+            opt_disp = f"{letters[i]}. {opt_disp_core}"
+            display_options.append(opt_disp)
+            display_to_full[opt_disp] = opt_str
+
+        q2["_display_options"] = display_options
+        q2["_display_to_full"] = display_to_full
+
     return q2
-
 
 def get_global_stats():
     if not st.session_state.history:
@@ -7216,7 +7044,7 @@ def generer_nouveau_quiz(module):
         return
     all_questions = db_questions[module]
     nb_to_take = min(len(all_questions), QUESTIONS_PAR_QUIZ)
-    st.session_state.quiz_batch = [_prepare_question_for_quiz(q, module) for q in random.sample(all_questions, nb_to_take)]
+    st.session_state.quiz_batch = [_prepare_question_for_quiz(q) for q in random.sample(all_questions, nb_to_take)]
     st.session_state.current_score = 0
     st.session_state.current_mistakes = []
     st.session_state.validated_questions = set()
@@ -7312,17 +7140,9 @@ elif menu == "Passer un Quiz":
             q_id = f"{module_choisi}_{q_hash}"
             
             if q["type"] == "qcm":
-                # On garde la valeur "originale" (texte complet) pour la correction,
-                # mais on affiche une version raccourcie pour éviter les indices de longueur.
-                options_with_id = list(enumerate(q["options"]))
-                selected = st.radio(
-                    "Réponse :",
-                    options_with_id,
-                    key=f"radio_{q_id}",
-                    index=None,
-                    format_func=lambda t: f"{chr(65 + t[0])}. {_shorten_option_for_display(t[1])}",
-                )
-                user_choice = selected[1] if selected is not None else None
+                display_opts = q.get("_display_options", q["options"])
+                user_choice_disp = st.radio("Réponse :", display_opts, key=f"radio_{q_id}", index=None)
+                user_choice = q.get("_display_to_full", {}).get(user_choice_disp, user_choice_disp)
                 if st.button(f"Valider", key=f"btn_{q_id}"):
                     st.session_state.show_explanation[q_id] = True
                     if q_id not in st.session_state.validated_questions:
