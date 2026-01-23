@@ -4,6 +4,7 @@ import plotly.express as px
 from datetime import datetime
 import random
 import json
+import copy
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Psychomot' Master - Suivi & Performance", page_icon="🧠", layout="wide")
 
@@ -6908,6 +6909,15 @@ st.sidebar.markdown("---")
 menu = st.sidebar.radio("📌 Navigation", ["Tableau de Bord", "Passer un Quiz"])
 
 # --- FONCTIONS UTILES ---
+
+def _prepare_question_for_quiz(q: dict) -> dict:
+    """Retourne une copie de la question, en mélangeant l'ordre des options pour les QCM.
+    Important: on ne modifie pas db_questions en place (sinon l'ordre reste mélangé partout)."""
+    q2 = copy.deepcopy(q)
+    if q2.get("type") == "qcm" and isinstance(q2.get("options"), list):
+        random.shuffle(q2["options"])
+    return q2
+
 def get_global_stats():
     if not st.session_state.history:
         return None
@@ -6950,7 +6960,7 @@ def generer_nouveau_quiz(module):
         return
     all_questions = db_questions[module]
     nb_to_take = min(len(all_questions), QUESTIONS_PAR_QUIZ)
-    st.session_state.quiz_batch = random.sample(all_questions, nb_to_take)
+    st.session_state.quiz_batch = [_prepare_question_for_quiz(q) for q in random.sample(all_questions, nb_to_take)]
     st.session_state.current_score = 0
     st.session_state.current_mistakes = []
     st.session_state.validated_questions = set()
